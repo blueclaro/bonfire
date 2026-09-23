@@ -1,30 +1,5 @@
-type ChatMessageProps = {
-  name: string;
-  text: string;
-  mine?: boolean;
-  compact?: boolean;
-};
+import ReportButton from "@/components/ReportButton";
 
-export default function ChatMessage({
-  name,
-  text,
-  mine = false,
-  compact = false,
-}: ChatMessageProps) {
-  return (
-    <div className={compact ? "" : `flex ${mine ? "justify-end" : "justify-start"}`}>
-      <div
-        className={`rounded-2xl px-4 py-3 text-sm ${
-          compact ? "max-w-[86%]" : "max-w-[85%] md:max-w-[70%]"
-        } ${
-          mine
-            ? `${compact ? "ml-auto" : ""} bg-[#ff8a3d] font-semibold text-[#21140e]`
-            : "bg-white/10 text-[#f6efe7]"
-        }`}
-      >
-        <strong className="mb-1 block text-xs opacity-70">{name}</strong>
-        <p>{text}</p>
-      </div>
-    </div>
-  );
+export default function ChatMessage({ name, text, time, mine = false, compact = false, onEdit, onDelete, busy = false, reportId }: { name: string; text: string; time?: string; mine?: boolean; compact?: boolean; onEdit?: () => void; onDelete?: () => void; busy?: boolean; reportId?: string }) {
+  return <div className={compact ? "" : `flex ${mine ? "justify-end" : "justify-start"}`}><div className={`rounded-2xl px-4 py-3 text-sm ${compact ? "max-w-[86%]" : "max-w-[85%] md:max-w-[70%]"} ${mine ? `${compact ? "ml-auto" : ""} bg-[#ff8a3d] font-semibold text-[#21140e]` : "bg-white/10"}`}><div className="mb-1 flex items-center justify-between gap-4 text-xs opacity-70"><strong>{name}</strong>{time && <time>{time}</time>}</div><p className="whitespace-pre-wrap break-words">{text}</p>{(onEdit || onDelete) && <div className="mt-2 flex justify-end gap-3 border-t border-black/10 pt-2 text-xs"><button type="button" onClick={onEdit} className="hover:underline">Editar</button><button type="button" disabled={busy} onClick={onDelete} className="hover:underline disabled:opacity-50">Excluir</button></div>}{!mine && reportId && <ReportButton targetType="message" targetId={reportId} />}</div></div>;
 }
