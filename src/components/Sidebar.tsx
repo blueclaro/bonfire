@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BonfireLogo from "@/components/BonfireLogo";
 import { useState } from "react";
 import ModerationLink from "@/components/ModerationLink";
 import NotificationBell from "@/components/NotificationBell";
@@ -21,7 +22,7 @@ export default function Sidebar({ active, showRooms = true }: { active: Active; 
   return <aside className="min-w-0 self-start border-b border-white/10 p-4 xl:min-h-screen xl:border-b-0 xl:border-r xl:p-6" onKeyDown={event => { if (event.key === "Escape") setMenuOpen(false); }}>
     <div className="flex items-center justify-between gap-3 xl:mb-10">
     <Link className="flex min-w-0 items-center gap-3" href="/">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#ff8a3d] text-xl">🔥</div>
+      <BonfireLogo />
       <div><h1 className="text-2xl font-bold">Bonfire</h1><p className="text-sm text-[#b9aaa0]">comunidade escolar</p></div>
     </Link>
     <button type="button" aria-expanded={menuOpen} aria-controls="main-navigation" onClick={() => setMenuOpen(open => !open)} className="min-h-11 shrink-0 rounded-xl border border-white/20 px-4 text-sm font-bold text-[#ffd19a] xl:hidden">{menuOpen ? "Fechar" : "Menu"}</button>
