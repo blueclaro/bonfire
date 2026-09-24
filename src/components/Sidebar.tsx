@@ -1,6 +1,7 @@
 import Link from "next/link";
 import ModerationLink from "@/components/ModerationLink";
 import NotificationBell from "@/components/NotificationBell";
+import TemporarySessionNotice from "@/components/TemporarySessionNotice";
 
 type Active = "inicio" | "foruns" | "chats" | "avisos" | "perfil" | "denuncias" | "notificacoes";
 const items: { label: string; href: string; key: Active }[] = [
@@ -21,7 +22,9 @@ export default function Sidebar({ active, showRooms = true }: { active: Active; 
       {items.map(item => <Link key={item.key} href={item.href} className={`rounded-lg px-4 py-3 text-center xl:text-left ${item.key === active ? "bg-white/10 text-white" : "hover:bg-white/5 hover:text-white"}`}>{item.label}</Link>)}
       <ModerationLink active={active === "denuncias"} />
       <NotificationBell active={active === "notificacoes"} />
+      <Link href="/conta-temporaria" className="rounded-lg px-4 py-3 text-center text-[#ffd19a] hover:bg-white/5 xl:text-left">Crie sua conta temporária!</Link>
     </nav>
+    <TemporarySessionNotice />
     {showRooms && <div className="mt-8 hidden border-t border-white/10 pt-6 xl:block">
       <p className="mb-3 text-xs uppercase tracking-[.2em] text-[#7d7068]">Salas ativas</p>
       <div className="space-y-3 text-sm text-[#b9aaa0]"><p># 2º informática</p><p># dúvidas enem</p><p># trabalhos</p><p># eventos</p></div>

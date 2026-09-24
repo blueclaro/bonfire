@@ -316,3 +316,92 @@ O envio de e-mail e o login com a nova senha precisam da validação manual acim
 Referências oficiais:
 [recuperação de senha](https://supabase.com/docs/reference/javascript/auth-resetpasswordforemail)
 e [URLs de redirecionamento](https://supabase.com/docs/guides/auth/redirect-urls).
+
+## Contas temporárias e QR Code da apresentação
+
+A página `/conta-temporaria` pede somente nome/apelido e tag. A identidade aparece
+como `CharlieLegal#bubu`. O nome aceita 2–32 caracteres sem # ou caracteres de
+controle. A tag aceita 1–16 letras ASCII/números, sem espaços, símbolos ou acentos,
+e é exclusiva entre contas temporárias sem distinguir maiúsculas/minúsculas.
+Nome/tag não são credenciais de login e não permitem recuperar uma sessão.
+
+Cada visitante recebe uma conta individual do Supabase Anonymous Sign-Ins,
+sem e-mail/senha/SMTP. A validade de 24 horas começa na criação e é aplicada
+pelas políticas do banco, mesmo quando o token de autenticação ainda é válido.
+Contas temporárias só acessam conteúdo `everyone`, podem publicar, comentar e
+conversar, mas não acessam turmas restritas, avisos da equipe ou moderação.
+O nome/tag e a validade não podem ser alterados pelo visitante.
+
+### Preparar antes de liberar
+
+1. Aplique `supabase/migrations/20260923_temporary_accounts.sql` depois das
+   migrações anteriores. Não reaplique migrações antigas depois dela.
+2. No Supabase Auth, habilite **Anonymous Sign-Ins**. Não desative a confirmação
+   de e-mail das contas permanentes: é um fluxo independente.
+3. Publique o código atualizado na Vercel.
+4. Apenas quando estiver pronto para testes/apresentação, execute no SQL Editor:
+
+```sql
+update public.temporary_access_settings
+set registration_enabled = true, access_enabled = true,
+    duration_hours = 24, max_accounts = 200
+where id = true;
+```
+
+O limite inicial é 200 contas temporárias no total, incluindo expiradas, e pode
+ser ajustado até 1000. A migração inicia com inscrições fechadas; reaplicá-la
+preserva as escolhas. A validação, exclusividade e limite são aplicados no
+banco dentro da transação que cria o usuário, impedindo bypass do formulário.
+O acesso dos participantes não depende de uma senha compartilhada no QR Code.
+
+Abra `https://bonfire-iota.vercel.app/apresentacao` para exibir o QR no projetor
+ou baixar o PNG para os slides. O QR é gerado localmente e contém somente o
+endereço `/conta-temporaria` da origem atual, sem credenciais. Não use o QR gerado
+em localhost na apresentação. A página estática não inclui dados de sessão;
+os dados pessoais são buscados exclusivamente no navegador autenticado.
+
+**Importante para uma turma no mesmo Wi-Fi:** o Supabase limita cadastros
+anônimos por IP (padrão documentado: 30 por hora). Confira Anonymous Sign-Ins
+em Authentication → Rate Limits e planeje um limite adequado ao público,
+sem remover proteções indiscriminadamente. Teste com a rede da apresentação.
+O limite total de contas do Bonfire não substitui o limite por IP do Supabase.
+
+O Supabase recomenda CAPTCHA/Turnstile contra abuso. Este formulário ainda não
+integra CAPTCHA: não ative o requisito global sem antes integrar o widget/token
+aos formulários de autenticação. Por enquanto, destine a entrada a uma sessão
+supervisionada, mantenha os limites e feche as inscrições após a apresentação.
+Não é uma implementação pronta para cadastro anônimo irrestrito em larga escala.
+[Referência oficial](https://supabase.com/docs/guides/auth/auth-anonymous).
+
+### Encerrar sem apagar dados
+
+Para fechar somente novas inscrições:
+
+```sql
+update public.temporary_access_settings set registration_enabled = false where id = true;
+```
+
+Para também bloquear todas as contas temporárias imediatamente:
+
+```sql
+update public.temporary_access_settings
+set registration_enabled = false, access_enabled = false where id = true;
+```
+
+Expirar/bloquear não apaga contas, tags, mensagens nem tópicos. A limpeza futura
+deve ser uma operação separada e revisada, pois excluir auth.users remove dados
+associados por cascata. Não foi adicionada rotina de exclusão automática.
+Contas permanentes não são desativadas por essas configurações.
+
+### Testar antes de sexta
+
+- Crie duas contas em navegadores/perfis diferentes, teste nomes/tags inválidos,
+  tag repetida com outra caixa e retorno à mesma sessão ao recarregar.
+- Publique um tópico, um comentário e uma mensagem. Confira autor e conteúdo
+  na outra conta. Confirme que áreas restritas e moderação permanecem bloqueadas.
+- Use `/perfil` e `/conta-temporaria` para verificar identidade e validade.
+- Teste fechar inscrições, bloquear acesso e reabrir pelo painel SQL.
+- Valide a expiração em um projeto Supabase de testes antes de usar dados reais.
+- Execute `npm run test:temporary` ou a suíte completa. Os testes locais usam
+  PostgreSQL descartável; criação de sessão Auth, limite por IP e celular real
+  ainda precisam do teste conectado ao Supabase.

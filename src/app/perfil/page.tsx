@@ -14,6 +14,7 @@ type Profile = {
   class_name: string | null;
   avatar_url: string | null;
   bio: string;
+  temporary_expires_at?: string | null;
 };
 
 type RecentPost = { id: string; title: string; created_at: string };
@@ -81,6 +82,7 @@ export default function PerfilPage() {
   }, [router]);
 
   async function handleLogout() {
+    if (profile?.temporary_expires_at && !window.confirm("Sair da conta temporária? Não será possível recuperá-la pelo nome ou tag.")) return;
     await supabase.auth.signOut({ scope: "local" });
     router.replace("/login");
     router.refresh();
@@ -170,14 +172,14 @@ export default function PerfilPage() {
                   <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-[#ff8a3d] text-4xl font-black text-[#21140e]">{initial}</div>
                 )}
                 <div>
-                  <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">Perfil de {roleLabels[profile.role]}</p>
+                  <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">{profile.temporary_expires_at ? "Conta temporária da apresentação" : "Perfil de " + roleLabels[profile.role]}</p>
                   <h1 className="mt-2 text-4xl font-black md:text-5xl">{displayName}</h1>
-                  <p className="mt-2 text-[#b9aaa0]">@{profile.username || "sem-usuario"}{profile.class_name ? ` · ${profile.class_name}` : ""} · {roleLabels[profile.role]}</p>
+                  {!profile.temporary_expires_at && <p className="mt-2 text-[#b9aaa0]">@{profile.username || "sem-usuario"}{profile.class_name ? ` · ${profile.class_name}` : ""} · {roleLabels[profile.role]}</p>}
                   <p className="mt-5 max-w-2xl leading-7 text-[#b9aaa0]">{profile.bio || "Este usuário ainda não adicionou uma biografia."}</p>
                 </div>
               </div>
               <div className="flex flex-wrap gap-3">
-                <button onClick={() => { setSaveMessage(""); setEditing(true); }} className="rounded-full bg-[#ff8a3d] px-5 py-3 font-bold text-[#21140e]">Editar perfil</button>
+                {!profile.temporary_expires_at && <button onClick={() => { setSaveMessage(""); setEditing(true); }} className="rounded-full bg-[#ff8a3d] px-5 py-3 font-bold text-[#21140e]">Editar perfil</button>}
                 <button onClick={handleLogout} className="rounded-full border border-white/10 bg-white/5 px-5 py-3 font-bold text-[#ffd19a]">Sair</button>
               </div>
             </div>

@@ -31,7 +31,7 @@ test("notificações privadas e automáticas", async t => {
       create publication supabase_realtime;
     `);
     const schema = readFileSync(resolve(__dirname, "../supabase/schema.sql"), "utf8");
-    assert.ok(schema.trimEnd().endsWith(notifyMigration.trimEnd()));
+    assert.ok(schema.includes(notifyMigration.trimEnd()));
     // Banco anterior com conteúdo existente: a migração não deve gerar alertas retroativos.
     await db.exec(schema.split("-- Notificações privadas. Execute após 20260923_content_removal.sql.")[0].replace(/create extension if not exists pgcrypto;/i, ""));
     for (const [index, user] of [author, commenter, moderator, stranger].entries()) {

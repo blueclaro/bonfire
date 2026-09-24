@@ -13,16 +13,19 @@
     "test:moderation": "node --test tests/moderation.integration.cjs",
     "test:reports": "node --test tests/reports.integration.cjs",
     "test:notifications": "node --test tests/notifications.integration.cjs",
+    "test:temporary": "node --test tests/temporaryAccount.test.cjs tests/temporaryAccounts.integration.cjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
     "next": "^15.5.0",
+    "qrcode": "^1.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
