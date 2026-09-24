@@ -12,6 +12,7 @@ function renderFeed(entries=[],user='demo'){
     if(name==='@/lib/social')return load('lib/social.ts');
     if(name==='@/lib/supabase')return {supabase:{}};
     if(name==='@/components/SocialAvatar')return load('components/SocialAvatar.tsx');
+    if(name==='@/components/ReactionIcon')return load('components/ReactionIcon.tsx');
     if(name==='@/components/SignedPostImage')return {default:()=>React.createElement('div',{'className':'mt-4 flex h-48 items-center justify-center rounded-xl bg-[#ff8a3d]/10 text-[#ffd19a]'},'Imagem de exemplo — prévia local')};
     if(name==='@/components/ReportButton')return {default:()=>React.createElement('button',{'className':'mt-3 text-xs'},'Denunciar')};
     return require(name);
