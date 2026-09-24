@@ -25,13 +25,15 @@ export default function Sidebar({ active, showRooms = true }: { active: Active; 
     </Link>
     <button type="button" aria-expanded={menuOpen} aria-controls="main-navigation" onClick={() => setMenuOpen(open => !open)} className="min-h-11 shrink-0 rounded-xl border border-white/20 px-4 text-sm font-bold text-[#ffd19a] xl:hidden">{menuOpen ? "Fechar" : "Menu"}</button>
     </div>
-    <div id="main-navigation" className={`${menuOpen ? "block" : "hidden"} pt-4 xl:block xl:pt-0`}>
+    <div id="main-navigation" data-open={menuOpen} className="mobile-navigation">
+    <div className="mobile-navigation-content"><div className="pt-4 xl:pt-0">
     <nav aria-label="Navegação principal" onClick={() => setMenuOpen(false)} className="grid gap-1 text-[#b9aaa0] xl:gap-2">
       {items.map(item => <Link key={item.key} href={item.href} aria-current={item.key === active ? "page" : undefined} className={`rounded-lg px-4 py-3 ${item.key === active ? "bg-white/10 text-white" : "hover:bg-white/5 hover:text-white"}`}>{item.label}</Link>)}
       <ModerationLink active={active === "denuncias"} />
       <NotificationBell active={active === "notificacoes"} />
     </nav>
     <TemporarySessionNotice />
+    </div></div>
     </div>
     {showRooms && <div className="mt-8 hidden border-t border-white/10 pt-6 xl:block">
       <p className="mb-3 text-xs uppercase tracking-[.2em] text-[#7d7068]">Salas ativas</p>

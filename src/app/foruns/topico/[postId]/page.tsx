@@ -288,6 +288,7 @@ export default function TopicPage() {
           ) : (
             <>
               <Link href={`/foruns/${post.category_id}`} className="text-sm text-[#ffd19a]">← Voltar à categoria</Link>
+              <a href="#novo-comentario" className="mt-4 block w-fit rounded-full bg-[#ff8a3d] px-5 py-3 font-bold text-[#21140e]">{post.is_locked ? "Ver comentários · tópico fechado" : "Comentar neste tópico"}</a>
 
               <article className="mt-6 rounded-2xl border border-white/10 bg-white/[.045] p-6 md:p-8">
                 <TopicStatus pinned={post.is_pinned} locked={post.is_locked} />
@@ -313,9 +314,10 @@ export default function TopicPage() {
               <section className="mt-8">
                 <h2 className="text-2xl font-black">Comentários <span className="text-[#ffd19a]">{comments.length}</span></h2>
 
-                <form onSubmit={handleComment} className="mt-5 rounded-xl border border-white/10 bg-white/[.035] p-5">
+                <form id="novo-comentario" aria-label="Publicar comentário" onSubmit={handleComment} className="mt-5 scroll-mt-4 rounded-xl border border-[#ff8a3d]/30 bg-white/[.035] p-5">
+                  <label htmlFor="comment-content" className="mb-3 block font-bold">Escreva sua resposta</label>
                   {post.is_locked && <p className="mb-4 text-sm text-[#ffd19a]">Este tópico está fechado para novos comentários.</p>}
-                  <textarea aria-label="Comentário" required minLength={2} value={content} onChange={(event) => setContent(event.target.value)} disabled={post.is_locked || sending} maxLength={2000} rows={4} placeholder="Escreva um comentário..." className="w-full resize-y rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-[#f6efe7] outline-none focus:border-[#ff8a3d] disabled:cursor-not-allowed disabled:opacity-50" />
+                  <textarea id="comment-content" aria-label="Comentário" required minLength={2} value={content} onChange={(event) => setContent(event.target.value)} disabled={post.is_locked || sending} maxLength={2000} rows={4} placeholder="Escreva um comentário..." className="w-full resize-y rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-[#f6efe7] outline-none focus:border-[#ff8a3d] disabled:cursor-not-allowed disabled:opacity-50" />
                   <div className="mt-2 flex items-center justify-between gap-4"><span className="text-xs text-[#7d7068]">{content.length}/2000</span><button type="submit" disabled={post.is_locked || sending || content.trim().length < 2} className="rounded-full bg-[#ff8a3d] px-5 py-2.5 font-bold text-[#21140e] disabled:cursor-not-allowed disabled:opacity-50">{sending ? "Enviando..." : "Comentar"}</button></div>
                   {message && <p className="mt-4 rounded-lg border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm text-red-200">{message}</p>}
                 </form>

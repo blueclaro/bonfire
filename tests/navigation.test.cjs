@@ -25,7 +25,7 @@ test('menu mobile inicia fechado e mantém navegação desktop acessível', () =
   const html = renderSidebar(false);
   assert.match(html, /aria-expanded="false"/);
   assert.match(html, /aria-controls="main-navigation"/);
-  assert.match(html, /id="main-navigation" class="hidden pt-4 xl:block/);
+  assert.match(html, /id="main-navigation" data-open="false" class="mobile-navigation"/);
   assert.match(html, /href="\/foruns" aria-current="page"/);
   assert.doesNotMatch(html, /Crie sua conta temporária|href="\/conta-temporaria"/);
 });
@@ -34,6 +34,16 @@ test('menu aberto expõe links e ação para fechar', () => {
   const html = renderSidebar(true);
   assert.match(html, /aria-expanded="true"/);
   assert.match(html, />Fechar<\/button>/);
-  assert.match(html, /id="main-navigation" class="block pt-4 xl:block/);
+  assert.match(html, /id="main-navigation" data-open="true" class="mobile-navigation"/);
   for (const href of ['/', '/foruns', '/chats', '/avisos', '/perfil']) assert.ok(html.includes(`href="${href}"`));
+});
+
+test('animação respeita movimento reduzido e tópicos oferecem acesso ao formulário', () => {
+  const css = readFileSync(resolve(__dirname, '../src/app/globals.css'), 'utf8');
+  assert.match(css, /grid-template-rows 240ms/);
+  assert.match(css, /prefers-reduced-motion: reduce/);
+  const topic = readFileSync(resolve(__dirname, '../src/app/foruns/topico/[postId]/page.tsx'), 'utf8');
+  assert.ok(topic.includes('href="#novo-comentario"'));
+  assert.ok(topic.includes('id="novo-comentario"'));
+  assert.ok(topic.includes('onSubmit={handleComment}'));
 });

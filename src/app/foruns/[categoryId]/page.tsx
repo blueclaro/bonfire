@@ -81,6 +81,7 @@ export default function CategoryPage() {
               {posts.length ? posts.map(post => <Link key={post.id} href={"/foruns/topico/" + post.id} className={"rounded-xl border bg-white/[.045] p-5 hover:border-[#ff8a3d]/40 " + (post.is_pinned ? "border-[#ff8a3d]/30" : "border-white/10")}>
                 <TopicStatus pinned={post.is_pinned} locked={post.is_locked} />
                 <h2 className="break-words text-xl font-bold">{post.title}</h2>
+                <p className="mt-3 font-semibold text-[#ffd19a]">{post.is_locked ? "Abrir tópico e ver comentários →" : "Abrir tópico e comentar →"}</p>
                 <p className="mt-2 text-sm text-[#b9aaa0]">{new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(post.created_at))}</p>
               </Link>) : <div className="rounded-xl border border-dashed border-white/10 p-7 text-[#b9aaa0]">Ainda não existem tópicos nesta categoria.</div>}
             </div>
