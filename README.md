@@ -1,5 +1,62 @@
 # Bonfire
 
+## Primeira versão social (24/09/2026)
+
+O início agora é um feed de texto e uma imagem opcional por publicação, com
+hashtags, curtidas, comentários e Ignites (reposts simples que preservam o autor).
+Os fóruns existentes permanecem acessíveis; seus dados e permissões não são apagados.
+Publicações novas do feed não precisam de título ou escolha de categoria.
+
+### Aplicação no Supabase — antes do deploy desta versão
+
+Execute no SQL Editor, nesta ordem, após as migrações de contas temporárias:
+
+1. `supabase/migrations/20260924_social_feed.sql`
+2. `supabase/migrations/20260924_social_storage.sql`
+
+Em instalações novas, execute o `schema.sql` e depois estes dois arquivos.
+Eles são reaplicáveis. Não reaplique migrações antigas por cima das novas.
+Não é necessário desabilitar RLS nem tornar o bucket público.
+Só publique o código depois do sucesso dos dois arquivos.
+
+### Escopo e limites da primeira versão
+
+- Feed: 20 eventos por página; publicações antigas acessíveis e Ignites aparecem
+  cronologicamente. Conteúdo restrito não pode receber Ignite.
+- Imagens: uma JPG/PNG/WebP de até 5 MB, convertida no navegador para JPEG de até
+  1600 px (remove metadados; transparência vira fundo branco). Bucket privado
+  `post-images`, com URLs assinadas de 120 segundos. Uma URL já emitida pode
+  funcionar até expirar; imagem já baixada não pode ser revogada do dispositivo.
+- O upload não sobrescreve arquivos. Se a resposta de publicação for ambígua,
+  o arquivo é preservado para não apagar uma imagem de publicação já gravada.
+  Limpeza de uploads órfãos é uma manutenção futura, não automática.
+- Curtidas e Ignites: uma interação de cada tipo por pessoa/publicação; clicar
+  novamente desfaz. Ainda não geram notificações próprias.
+- Publicações novas podem ser excluídas pelo autor no feed. Edição de texto de
+  publicações sem título não faz parte desta versão. Fóruns antigos mantêm edição.
+- Perfil: etiqueta `school_label` editável, inclusive para contas temporárias
+  ativas. É apenas informação declarada pelo participante; `class_name` continua
+  administrativo e controla acesso. Identificadores antigos são preservados.
+- `/pessoas/[id]`: perfil público para membros autenticados, com atalho de mensagem.
+- `/mensagens`: texto individual, busca por nome, últimas 100 mensagens de cada
+  conversa e atualização a cada 10 segundos. Bloquear interrompe novos envios em
+  ambos os sentidos, sem apagar histórico. Sem anexos, recibos, E2EE ou denúncias
+  de DMs nesta versão. Administradores do banco ainda possuem acesso técnico;
+  o isolamento é aplicado aos usuários do aplicativo pelo RLS.
+
+### Verificação antes de liberar
+
+`node --test tests/*.test.cjs tests/*.integration.cjs` inclui testes de isolamento,
+expiração, contagens, falsificação, repost de conteúdo privado e políticas de imagem.
+Os testes de banco usam PostgreSQL local descartável e um esquema de Storage
+simulado; não substituem testar o serviço real de upload.
+
+Após aplicar as migrações, validar com duas contas: publicar texto e imagem,
+filtrar hashtag, curtir/descurtir, dar/desfazer Ignite, comentar, abrir perfil,
+alterar etiqueta de turma, enviar mensagem e bloquear/desbloquear. Testar uma
+terceira conta sem acesso à conversa e o celular com teclado aberto. Não enviar
+mensagens ou criar publicações de teste em nome de usuários sem autorização.
+
 Plataforma social escolar desenvolvida com Next.js, React, TypeScript, Tailwind CSS e Supabase.
 
 ## Executar no Windows

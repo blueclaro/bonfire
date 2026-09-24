@@ -2,6 +2,8 @@
 
 import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
+import SchoolLabelEditor from "@/components/SchoolLabelEditor";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -14,10 +16,11 @@ type Profile = {
   class_name: string | null;
   avatar_url: string | null;
   bio: string;
+  school_label?: string;
   temporary_expires_at?: string | null;
 };
 
-type RecentPost = { id: string; title: string; created_at: string };
+type RecentPost = { id: string; title: string; content: string; created_at: string };
 
 const roleLabels: Record<Profile["role"], string> = {
   student: "Aluno",
@@ -55,7 +58,7 @@ export default function PerfilPage() {
       const [profileResult, postsResult, postCountResult, commentCountResult] =
         await Promise.all([
           supabase.from("profiles").select("*").eq("id", user.id).single(),
-          supabase.from("posts").select("id, title, created_at").eq("author_id", user.id).order("created_at", { ascending: false }).limit(5),
+          supabase.from("posts").select("id, title, content, created_at").eq("author_id", user.id).order("created_at", { ascending: false }).limit(5),
           supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", user.id),
           supabase.from("comments").select("id", { count: "exact", head: true }).eq("author_id", user.id),
         ]);
@@ -174,7 +177,8 @@ export default function PerfilPage() {
                 <div>
                   <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">{profile.temporary_expires_at ? "Conta temporária da apresentação" : "Perfil de " + roleLabels[profile.role]}</p>
                   <h1 className="mt-2 text-3xl font-black sm:text-4xl md:text-5xl">{displayName}</h1>
-                  {!profile.temporary_expires_at && <p className="mt-2 text-[#b9aaa0]">@{profile.username || "sem-usuario"}{profile.class_name ? ` · ${profile.class_name}` : ""} · {roleLabels[profile.role]}</p>}
+                  <SchoolLabelEditor initial={profile.school_label || ""}/>
+                  {!profile.temporary_expires_at && <p className="mt-2 text-[#b9aaa0]">@{profile.username || "sem-usuario"}</p>}
                   <p className="mt-5 max-w-2xl leading-7 text-[#b9aaa0]">{profile.bio || "Este usuário ainda não adicionou uma biografia."}</p>
                 </div>
               </div>
@@ -207,7 +211,7 @@ export default function PerfilPage() {
                 </label>
 
                 <label className="text-sm text-[#b9aaa0] md:col-span-2">
-                  Turma
+                  Turma de acesso (administração)
                   <input value={classNameInput} disabled className="mt-2 w-full cursor-not-allowed rounded-lg border border-white/10 bg-black/20 px-4 py-3 text-[#7d7068] opacity-70" />
                   <span className="mt-1 block text-xs text-[#7d7068]">A turma é definida pela administração da escola.</span>
                 </label>
@@ -236,7 +240,7 @@ export default function PerfilPage() {
               <div className="grid gap-3">
                 {posts.length > 0 ? posts.map((post) => (
                   <article key={post.id} className="rounded-xl border border-white/10 bg-white/[.045] p-5">
-                    <h3 className="text-xl font-bold">{post.title}</h3>
+                    <h3 className="text-xl font-bold"><Link href={`/foruns/topico/${post.id}`}>{post.title || post.content.slice(0,120) || "Publicação com imagem"}</Link></h3>
                     <p className="mt-2 text-sm text-[#7d7068]">{new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(post.created_at))}</p>
                   </article>
                 )) : (

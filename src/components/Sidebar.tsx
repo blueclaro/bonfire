@@ -6,9 +6,10 @@ import ModerationLink from "@/components/ModerationLink";
 import NotificationBell from "@/components/NotificationBell";
 import TemporarySessionNotice from "@/components/TemporarySessionNotice";
 
-type Active = "inicio" | "foruns" | "chats" | "avisos" | "perfil" | "denuncias" | "notificacoes";
+type Active = "inicio" | "foruns" | "chats" | "avisos" | "perfil" | "denuncias" | "notificacoes" | "mensagens";
 const items: { label: string; href: string; key: Active }[] = [
-  { label: "Início", href: "/", key: "inicio" },
+  { label: "Feed", href: "/", key: "inicio" },
+  { label: "Mensagens", href: "/mensagens", key: "mensagens" },
   { label: "Fóruns", href: "/foruns", key: "foruns" },
   { label: "Chats", href: "/chats", key: "chats" },
   { label: "Avisos", href: "/avisos", key: "avisos" },

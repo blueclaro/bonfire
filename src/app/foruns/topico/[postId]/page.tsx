@@ -1,6 +1,9 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import SignedPostImage from "@/components/SignedPostImage";
+import SocialAvatar from "@/components/SocialAvatar";
+import { socialHandle, FEED_CATEGORY } from "@/lib/social";
 import TopicActions from "@/components/TopicActions";
 import TopicModeration from "@/components/TopicModeration";
 import ReportButton from "@/components/ReportButton";
@@ -14,6 +17,8 @@ type Author = {
   display_name: string | null;
   username: string | null;
   role: string;
+  avatar_url: string | null;
+  temporary_tag: string | null;
 };
 
 type Post = {
@@ -23,6 +28,7 @@ type Post = {
   created_at: string;
   updated_at: string;
   category_id: string;
+  image_path: string | null;
   author_id: string;
   is_locked: boolean;
   is_pinned: boolean;
@@ -53,7 +59,7 @@ function formatDate(value: string) {
 }
 
 function authorName(author: Author | null) {
-  return author?.display_name || author?.username || "Usuário";
+  return socialHandle(author);
 }
 
 export default function TopicPage() {
@@ -91,7 +97,7 @@ export default function TopicPage() {
 
     const authorIds = [...new Set((commentData ?? []).map((comment) => comment.author_id))];
     const { data: profiles, error: profilesError } = authorIds.length
-      ? await supabase.from("profiles").select("id, display_name, username, role").in("id", authorIds)
+      ? await supabase.from("profiles").select("id, display_name, username, role, avatar_url, temporary_tag").in("id", authorIds)
       : { data: [], error: null };
 
     if (profilesError) {
@@ -131,7 +137,7 @@ export default function TopicPage() {
       setCurrentRole(viewerError ? "" : viewer?.role ?? "");
       const { data: postData, error: postError } = await supabase
         .from("posts")
-        .select("id, title, content, created_at, updated_at, category_id, author_id, is_locked, is_pinned")
+        .select("id, title, content, created_at, updated_at, category_id, author_id, is_locked, is_pinned, image_path")
         .eq("id", postId)
         .single();
 
@@ -139,7 +145,7 @@ export default function TopicPage() {
       if (postData) {
         const { data: profileData, error: profileError } = await supabase
           .from("profiles")
-          .select("display_name, username, role")
+          .select("display_name, username, role, avatar_url, temporary_tag")
           .eq("id", postData.author_id)
           .single();
         if (!valid()) return;
@@ -287,22 +293,23 @@ export default function TopicPage() {
             </>
           ) : (
             <>
-              <Link href={`/foruns/${post.category_id}`} className="text-sm text-[#ffd19a]">← Voltar à categoria</Link>
+              <Link href={post.category_id === FEED_CATEGORY ? "/" : `/foruns/${post.category_id}`} className="text-sm text-[#ffd19a]">← Voltar às publicações</Link>
               <a href="#novo-comentario" className="mt-4 block w-fit rounded-full bg-[#ff8a3d] px-5 py-3 font-bold text-[#21140e]">{post.is_locked ? "Ver comentários · tópico fechado" : "Comentar neste tópico"}</a>
 
               <article className="mt-6 rounded-2xl border border-white/10 bg-white/[.045] p-6 md:p-8">
                 <TopicStatus pinned={post.is_pinned} locked={post.is_locked} />
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ff8a3d] font-black text-[#21140e]">{authorName(post.author).charAt(0).toUpperCase()}</div>
+                  <SocialAvatar author={post.author}/>
                   <div>
-                    <strong>{authorName(post.author)}</strong>
-                    <p className="text-sm text-[#7d7068]">@{post.author?.username || "usuário"} · {roleLabels[post.author?.role || ""] || "Membro"} · {formatDate(post.created_at)}</p>
+                    <Link href={`/pessoas/${post.author_id}`} className="font-bold">{authorName(post.author)}</Link>
+                    <p className="text-sm text-[#7d7068]">{formatDate(post.created_at)}</p>
                   </div>
                 </div>
-                <h1 className="mt-7 text-3xl font-black md:text-5xl">{post.title}</h1>
+                <h1 className={post.title ? "mt-7 text-3xl font-black md:text-5xl" : "sr-only"}>{post.title || "Publicação de " + authorName(post.author)}</h1>
                 <p className="mt-7 whitespace-pre-wrap leading-8 text-[#d2c5bb]">{post.content}</p>
+                {post.image_path && <SignedPostImage path={post.image_path}/>}
                 {post.updated_at !== post.created_at && <p className="mt-3 text-xs text-[#b9aaa0]">Editado em {formatDate(post.updated_at)}</p>}
-                {post.author_id === currentUserId && <TopicActions key={post.id + ":" + currentUserId} post={post} onSaved={changes => {
+                {post.author_id === currentUserId && !!post.title && <TopicActions key={post.id + ":" + currentUserId} post={post} onSaved={changes => {
                   setPost(current => current?.id === post.id ? { ...current, ...changes } : current);
                 }} />}
                 {["coordination", "moderator"].includes(currentRole) && <TopicModeration key={"moderation:" + post.id + ":" + currentUserId} postId={post.id} flags={post} onChanged={flags => {
@@ -325,7 +332,7 @@ export default function TopicPage() {
                 <div className="mt-5 grid gap-3">
                   {commentsLoading ? <div className="rounded-xl border border-white/10 p-6 text-[#b9aaa0]">Carregando comentários...</div> : comments.length ? comments.map((comment) => (
                     <article key={comment.id} className="rounded-xl border border-white/10 bg-white/[.045] p-5">
-                      <div className="flex flex-wrap items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 font-bold text-[#ffd19a]">{authorName(comment.author).charAt(0).toUpperCase()}</div><div><strong>{authorName(comment.author)}</strong><p className="text-xs text-[#7d7068]">@{comment.author?.username || "usuário"} · {roleLabels[comment.author?.role || ""] || "Membro"} · {formatDate(comment.created_at)}{comment.updated_at !== comment.created_at ? " · editado" : ""}</p></div></div>{comment.author_id === currentUserId && <div className="flex gap-3 text-xs"><button type="button" onClick={() => { setEditingCommentId(comment.id); setEditContent(comment.content); setMessage(""); }} className="text-[#ffd19a] hover:underline">Editar</button><button type="button" disabled={commentActionId === comment.id} onClick={() => handleDeleteComment(comment.id)} className="text-red-300 hover:underline disabled:opacity-50">Excluir</button></div>}</div>
+                      <div className="flex flex-wrap items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><SocialAvatar author={comment.author}/><div><strong>{authorName(comment.author)}</strong><p className="text-xs text-[#7d7068]">{formatDate(comment.created_at)}{comment.updated_at !== comment.created_at ? " · editado" : ""}</p></div></div>{comment.author_id === currentUserId && <div className="flex gap-3 text-xs"><button type="button" onClick={() => { setEditingCommentId(comment.id); setEditContent(comment.content); setMessage(""); }} className="text-[#ffd19a] hover:underline">Editar</button><button type="button" disabled={commentActionId === comment.id} onClick={() => handleDeleteComment(comment.id)} className="text-red-300 hover:underline disabled:opacity-50">Excluir</button></div>}</div>
                       {editingCommentId === comment.id ? <form onSubmit={(event) => handleEditComment(event, comment.id)} className="mt-4"><textarea required minLength={2} maxLength={2000} rows={4} value={editContent} onChange={(event) => setEditContent(event.target.value)} className="w-full resize-y rounded-lg border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-[#ff8a3d]"/><div className="mt-2 flex justify-end gap-3"><button type="button" onClick={() => setEditingCommentId("")} className="rounded-full border border-white/10 px-4 py-2 text-sm">Cancelar</button><button disabled={commentActionId === comment.id || editContent.trim().length < 2} className="rounded-full bg-[#ff8a3d] px-4 py-2 text-sm font-bold text-[#21140e] disabled:opacity-50">Salvar</button></div></form> : <p className="mt-4 whitespace-pre-wrap leading-7 text-[#d2c5bb]">{comment.content}</p>}
                       {currentUserId && comment.author_id !== currentUserId && <ReportButton key={comment.id + currentUserId} targetType="comment" targetId={comment.id} />}
                     </article>
