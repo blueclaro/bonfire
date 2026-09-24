@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import { initialForumCategory } from "@/lib/forumEntry";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -65,11 +66,13 @@ export default function ForunsPage() {
     }));
 
     setCategories(loadedCategories);
-    setCategoryId((current) => current || loadedCategories[0]?.id || "");
+    const requested = new URLSearchParams(window.location.search).get("categoria");
+    setCategoryId((current) => initialForumCategory(loadedCategories, current, requested));
     setLoading(false);
   }, []);
 
   useEffect(() => {
+    setShowForm(new URLSearchParams(window.location.search).get("novo") === "1");
     loadCategories();
   }, [loadCategories]);
 
@@ -151,7 +154,7 @@ export default function ForunsPage() {
           </header>
 
           {showForm && (
-            <form onSubmit={handleCreateTopic} className="mb-8 rounded-2xl border border-[#ff8a3d]/30 bg-white/[.045] p-5 md:p-7">
+            <form id="novo-topico" onSubmit={handleCreateTopic} className="mb-8 scroll-mt-4 rounded-2xl border border-[#ff8a3d]/30 bg-white/[.045] p-5 md:p-7">
               <h2 className="mb-5 text-2xl font-black">Novo tópico</h2>
               <div className="grid gap-5">
                 <label className="text-sm text-[#b9aaa0]">

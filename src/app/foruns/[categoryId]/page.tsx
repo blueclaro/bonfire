@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/Sidebar";
+import { forumCreationHref } from "@/lib/forumEntry";
 import TopicStatus from "@/components/TopicStatus";
 import { supabase } from "@/lib/supabase";
 import Link from "next/link";
@@ -77,13 +78,14 @@ export default function CategoryPage() {
           !category ? <p className="mt-8 text-red-200">Categoria não encontrada ou acesso indisponível.</p> : <>
             <h1 className="mt-6 text-4xl font-black">{category.name}</h1>
             <p className="mt-3 text-[#b9aaa0]">{category.description}</p>
+            <Link href={forumCreationHref(category.id)} className="mt-6 inline-flex min-h-11 items-center justify-center rounded-full bg-[#ff8a3d] px-5 py-3 font-bold text-[#21140e]">Criar tópico</Link>
             <div className="mt-8 grid gap-3">
               {posts.length ? posts.map(post => <Link key={post.id} href={"/foruns/topico/" + post.id} className={"rounded-xl border bg-white/[.045] p-5 hover:border-[#ff8a3d]/40 " + (post.is_pinned ? "border-[#ff8a3d]/30" : "border-white/10")}>
                 <TopicStatus pinned={post.is_pinned} locked={post.is_locked} />
                 <h2 className="break-words text-xl font-bold">{post.title}</h2>
                 <p className="mt-3 font-semibold text-[#ffd19a]">{post.is_locked ? "Abrir tópico e ver comentários →" : "Abrir tópico e comentar →"}</p>
                 <p className="mt-2 text-sm text-[#b9aaa0]">{new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(post.created_at))}</p>
-              </Link>) : <div className="rounded-xl border border-dashed border-white/10 p-7 text-[#b9aaa0]">Ainda não existem tópicos nesta categoria.</div>}
+              </Link>) : <div className="rounded-xl border border-dashed border-white/10 p-7 text-[#b9aaa0]"><p>Ainda não existem tópicos nesta categoria.</p><p className="mt-2">Crie o primeiro tópico para compartilhar sua dúvida. Depois, todos poderão comentar nele.</p><Link href={forumCreationHref(category.id)} className="mt-4 inline-flex min-h-11 items-center font-bold text-[#ffd19a] underline">Criar o primeiro tópico →</Link></div>}
             </div>
           </>}
       </section>
