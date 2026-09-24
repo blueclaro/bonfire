@@ -174,14 +174,14 @@ export default function ChatsPage() {
 
   return (
     <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
-      <section className="grid min-h-screen xl:grid-cols-[260px_320px_1fr]">
+      <section className="app-shell grid min-h-screen xl:grid-cols-[260px_320px_1fr]">
         <Sidebar active="chats" showRooms={false} />
         <aside className="border-b border-white/10 p-5 xl:border-b-0 xl:border-r">
           <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">Chats</p>
           <h1 className="mb-5 text-3xl font-black">Salas</h1>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="flex gap-3 overflow-x-auto pb-2 xl:grid xl:grid-cols-1 xl:overflow-visible">
             {loadingRooms ? <p className="text-sm text-[#b9aaa0]">Carregando salas...</p> : rooms.length ? rooms.map((room) => (
-              <button type="button" key={room.id} onClick={() => setSelectedRoomId(room.id)} className={`rounded-xl border p-4 text-left ${selectedRoomId === room.id ? "border-[#ff8a3d]/50 bg-[#ff8a3d]/10" : "border-white/10 bg-white/[.045] hover:border-white/20"}`}>
+              <button type="button" key={room.id} onClick={() => setSelectedRoomId(room.id)} className={`w-52 shrink-0 rounded-xl border p-4 xl:w-auto text-left ${selectedRoomId === room.id ? "border-[#ff8a3d]/50 bg-[#ff8a3d]/10" : "border-white/10 bg-white/[.045] hover:border-white/20"}`}>
                 <strong>{room.name}</strong>
                 <p className="mt-2 text-sm text-[#b9aaa0]">{room.description || "Sala da comunidade"}</p>
               </button>
@@ -189,12 +189,12 @@ export default function ChatsPage() {
           </div>
         </aside>
 
-        <section className="grid min-h-[650px] grid-rows-[auto_1fr_auto] overflow-hidden">
+        <section className="grid h-[75dvh] min-h-[360px] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden xl:h-dvh">
           <header className="border-b border-white/10 p-5">
             <h2 className="text-2xl font-bold">{selectedRoom ? `# ${selectedRoom.name}` : "Selecione uma sala"}</h2>
             <p className="text-sm text-[#b9aaa0]">{selectedRoom?.description || "Escolha uma sala para conversar."}</p>
           </header>
-          <div aria-live="polite" className="max-h-[calc(100vh-190px)] space-y-4 overflow-y-auto p-6">
+          <div aria-live="polite" className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4 md:p-6">
             {errorMessage && <p className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">{errorMessage}</p>}
             {loadingMessages ? <p className="text-[#b9aaa0]">Carregando mensagens...</p> : messages.length ? messages.map((message) => (
               editingMessageId === message.id ? <form key={message.id} onSubmit={(event) => handleEditMessage(event, message.id)} className="ml-auto max-w-[85%] rounded-2xl bg-[#ff8a3d] p-3 text-[#21140e] md:max-w-[70%]"><textarea required maxLength={2000} rows={3} value={editContent} onChange={(event) => setEditContent(event.target.value)} className="w-full resize-y rounded-lg border border-black/10 bg-white/40 px-3 py-2 outline-none"/><div className="mt-2 flex justify-end gap-2"><button type="button" onClick={() => setEditingMessageId("")} className="rounded-full border border-black/20 px-3 py-1.5 text-xs">Cancelar</button><button disabled={messageActionId === message.id || !editContent.trim()} className="rounded-full bg-[#21140e] px-3 py-1.5 text-xs font-bold text-white disabled:opacity-50">Salvar</button></div></form> : <ChatMessage key={message.id} reportId={message.id} name={message.author_id === currentUserId ? "Você" : authorName(message.author)} text={message.content} time={`${formatTime(message.created_at)}${message.updated_at !== message.created_at ? " · editada" : ""}`} mine={message.author_id === currentUserId} onEdit={message.author_id === currentUserId ? () => { setEditingMessageId(message.id); setEditContent(message.content); setErrorMessage(""); } : undefined} onDelete={message.author_id === currentUserId ? () => handleDeleteMessage(message.id) : undefined} busy={messageActionId === message.id} />
@@ -203,7 +203,7 @@ export default function ChatsPage() {
           </div>
           <form onSubmit={handleSend} className="flex gap-3 border-t border-white/10 p-5">
             <input aria-label="Mensagem" value={content} onChange={(event) => setContent(event.target.value)} disabled={!selectedRoom || sending} maxLength={2000} className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 outline-none focus:border-[#ff8a3d] disabled:cursor-not-allowed disabled:opacity-50" placeholder={selectedRoom ? "Enviar mensagem..." : "Selecione uma sala"} />
-            <button type="submit" aria-label="Enviar mensagem" disabled={!selectedRoom || sending || !content.trim()} className="h-12 w-12 rounded-full bg-[#ff8a3d] text-xl font-black text-[#21140e] disabled:cursor-not-allowed disabled:opacity-50">{sending ? "…" : "›"}</button>
+            <button type="submit" aria-label="Enviar mensagem" disabled={!selectedRoom || sending || !content.trim()} className="h-12 w-12 shrink-0 rounded-full bg-[#ff8a3d] text-xl font-black text-[#21140e] disabled:cursor-not-allowed disabled:opacity-50">{sending ? "…" : "›"}</button>
           </form>
         </section>
       </section>

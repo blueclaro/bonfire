@@ -160,10 +160,10 @@ export default function PerfilPage() {
 
   return (
     <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
-      <section className="grid min-h-screen xl:grid-cols-[260px_1fr]">
+      <section className="app-shell grid min-h-screen xl:grid-cols-[260px_1fr]">
         <Sidebar active="perfil" />
         <section className="p-4 md:p-8">
-          <div className="mb-8 rounded-2xl border border-white/10 bg-gradient-to-br from-[#21140e] to-[#15110f] p-8">
+          <div className="mb-8 rounded-2xl border border-white/10 bg-gradient-to-br from-[#21140e] to-[#15110f] p-5 sm:p-8">
             <div className="flex flex-col items-start justify-between gap-6 lg:flex-row">
               <div className="flex flex-col gap-5 sm:flex-row">
                 {profile.avatar_url ? (
@@ -173,7 +173,7 @@ export default function PerfilPage() {
                 )}
                 <div>
                   <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">{profile.temporary_expires_at ? "Conta temporária da apresentação" : "Perfil de " + roleLabels[profile.role]}</p>
-                  <h1 className="mt-2 text-4xl font-black md:text-5xl">{displayName}</h1>
+                  <h1 className="mt-2 text-3xl font-black sm:text-4xl md:text-5xl">{displayName}</h1>
                   {!profile.temporary_expires_at && <p className="mt-2 text-[#b9aaa0]">@{profile.username || "sem-usuario"}{profile.class_name ? ` · ${profile.class_name}` : ""} · {roleLabels[profile.role]}</p>}
                   <p className="mt-5 max-w-2xl leading-7 text-[#b9aaa0]">{profile.bio || "Este usuário ainda não adicionou uma biografia."}</p>
                 </div>

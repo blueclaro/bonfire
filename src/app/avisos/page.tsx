@@ -163,12 +163,12 @@ export default function AvisosPage() {
   const fieldClass = "mt-2 w-full rounded-lg border border-white/10 bg-[#181513] px-4 py-3 text-[#f6efe7] outline-none focus:border-[#ff8a3d]";
   return (
     <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
-      <section className="grid min-h-screen xl:grid-cols-[260px_1fr]">
+      <section className="app-shell grid min-h-screen xl:grid-cols-[260px_1fr]">
         <Sidebar active="avisos" />
         <section className="min-w-0 p-4 md:p-8">
           <header className="mb-8">
             <p className="mb-3 text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">Avisos</p>
-            <h1 className="text-4xl font-black md:text-5xl">Comunicados oficiais do colégio.</h1>
+            <h1 className="text-3xl font-black sm:text-4xl md:text-5xl">Comunicados oficiais do colégio.</h1>
             <p className="mt-4 text-[#b9aaa0]">Prazos, reuniões, provas e eventos importantes em um só lugar.</p>
             {canPublish && <button disabled={saving} onClick={() => { resetForm(); setShowForm(!showForm); }} className="mt-5 rounded-full bg-[#ff8a3d] px-5 py-3 font-bold text-[#21140e]">{showForm ? "Cancelar" : "Publicar aviso"}</button>}
           </header>

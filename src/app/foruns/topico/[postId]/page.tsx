@@ -274,7 +274,7 @@ export default function TopicPage() {
 
   return (
     <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
-      <section className="grid min-h-screen xl:grid-cols-[260px_1fr]">
+      <section className="app-shell grid min-h-screen xl:grid-cols-[260px_1fr]">
         <Sidebar active="foruns" />
         <section className="p-4 md:p-8">
           {loading ? (
@@ -291,8 +291,8 @@ export default function TopicPage() {
 
               <article className="mt-6 rounded-2xl border border-white/10 bg-white/[.045] p-6 md:p-8">
                 <TopicStatus pinned={post.is_pinned} locked={post.is_locked} />
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#ff8a3d] font-black text-[#21140e]">{authorName(post.author).charAt(0).toUpperCase()}</div>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ff8a3d] font-black text-[#21140e]">{authorName(post.author).charAt(0).toUpperCase()}</div>
                   <div>
                     <strong>{authorName(post.author)}</strong>
                     <p className="text-sm text-[#7d7068]">@{post.author?.username || "usuário"} · {roleLabels[post.author?.role || ""] || "Membro"} · {formatDate(post.created_at)}</p>
@@ -323,7 +323,7 @@ export default function TopicPage() {
                 <div className="mt-5 grid gap-3">
                   {commentsLoading ? <div className="rounded-xl border border-white/10 p-6 text-[#b9aaa0]">Carregando comentários...</div> : comments.length ? comments.map((comment) => (
                     <article key={comment.id} className="rounded-xl border border-white/10 bg-white/[.045] p-5">
-                      <div className="flex items-start justify-between gap-4"><div className="flex items-center gap-3"><div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 font-bold text-[#ffd19a]">{authorName(comment.author).charAt(0).toUpperCase()}</div><div><strong>{authorName(comment.author)}</strong><p className="text-xs text-[#7d7068]">@{comment.author?.username || "usuário"} · {roleLabels[comment.author?.role || ""] || "Membro"} · {formatDate(comment.created_at)}{comment.updated_at !== comment.created_at ? " · editado" : ""}</p></div></div>{comment.author_id === currentUserId && <div className="flex gap-3 text-xs"><button type="button" onClick={() => { setEditingCommentId(comment.id); setEditContent(comment.content); setMessage(""); }} className="text-[#ffd19a] hover:underline">Editar</button><button type="button" disabled={commentActionId === comment.id} onClick={() => handleDeleteComment(comment.id)} className="text-red-300 hover:underline disabled:opacity-50">Excluir</button></div>}</div>
+                      <div className="flex flex-wrap items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 font-bold text-[#ffd19a]">{authorName(comment.author).charAt(0).toUpperCase()}</div><div><strong>{authorName(comment.author)}</strong><p className="text-xs text-[#7d7068]">@{comment.author?.username || "usuário"} · {roleLabels[comment.author?.role || ""] || "Membro"} · {formatDate(comment.created_at)}{comment.updated_at !== comment.created_at ? " · editado" : ""}</p></div></div>{comment.author_id === currentUserId && <div className="flex gap-3 text-xs"><button type="button" onClick={() => { setEditingCommentId(comment.id); setEditContent(comment.content); setMessage(""); }} className="text-[#ffd19a] hover:underline">Editar</button><button type="button" disabled={commentActionId === comment.id} onClick={() => handleDeleteComment(comment.id)} className="text-red-300 hover:underline disabled:opacity-50">Excluir</button></div>}</div>
                       {editingCommentId === comment.id ? <form onSubmit={(event) => handleEditComment(event, comment.id)} className="mt-4"><textarea required minLength={2} maxLength={2000} rows={4} value={editContent} onChange={(event) => setEditContent(event.target.value)} className="w-full resize-y rounded-lg border border-white/10 bg-black/20 px-4 py-3 outline-none focus:border-[#ff8a3d]"/><div className="mt-2 flex justify-end gap-3"><button type="button" onClick={() => setEditingCommentId("")} className="rounded-full border border-white/10 px-4 py-2 text-sm">Cancelar</button><button disabled={commentActionId === comment.id || editContent.trim().length < 2} className="rounded-full bg-[#ff8a3d] px-4 py-2 text-sm font-bold text-[#21140e] disabled:opacity-50">Salvar</button></div></form> : <p className="mt-4 whitespace-pre-wrap leading-7 text-[#d2c5bb]">{comment.content}</p>}
                       {currentUserId && comment.author_id !== currentUserId && <ReportButton key={comment.id + currentUserId} targetType="comment" targetId={comment.id} />}
                     </article>

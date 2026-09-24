@@ -97,7 +97,7 @@ export default function ReportsPage() {
     }
   }
 
-  return <main className="min-h-screen bg-[#100f0e] text-[#f6efe7] xl:grid xl:grid-cols-[260px_1fr]">
+  return <main className="min-h-screen bg-[#100f0e] text-[#f6efe7] app-shell xl:grid xl:grid-cols-[260px_1fr]">
     <Sidebar active="denuncias" showRooms={false} />
     <section className="mx-auto w-full max-w-5xl p-5 md:p-10">
       <h1 className="text-3xl font-black">Denúncias</h1>

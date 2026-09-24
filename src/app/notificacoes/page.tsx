@@ -31,7 +31,7 @@ export default function NotificationsPage() {
     } finally { saving.current = false; setBusy(""); }
   }
 
-  return <main className="min-h-screen bg-[#100f0e] text-[#f6efe7] xl:grid xl:grid-cols-[260px_1fr]">
+  return <main className="min-h-screen bg-[#100f0e] text-[#f6efe7] app-shell xl:grid xl:grid-cols-[260px_1fr]">
     <Sidebar active="notificacoes" showRooms={false} />
     <section className="mx-auto w-full max-w-4xl p-5 md:p-10">
       <h1 className="text-3xl font-black">Notificações</h1>

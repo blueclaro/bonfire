@@ -68,7 +68,7 @@ export default function CategoryPage() {
   }, [categoryId, retry]);
 
   return <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
-    <section className="grid min-h-screen xl:grid-cols-[260px_1fr]">
+    <section className="app-shell grid min-h-screen xl:grid-cols-[260px_1fr]">
       <Sidebar active="foruns" />
       <section className="p-4 md:p-8">
         <Link href="/foruns" className="text-sm text-[#ffd19a]">← Voltar aos fóruns</Link>

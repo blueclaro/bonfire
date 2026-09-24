@@ -131,14 +131,14 @@ export default function ForunsPage() {
 
   return (
     <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
-      <section className="grid min-h-screen xl:grid-cols-[260px_1fr]">
+      <section className="app-shell grid min-h-screen xl:grid-cols-[260px_1fr]">
         <Sidebar active="foruns" />
 
         <section className="p-4 md:p-8">
           <header className="mb-8 flex flex-col items-start justify-between gap-6 lg:flex-row">
             <div>
               <p className="mb-3 text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">Fóruns</p>
-              <h1 className="text-4xl font-black md:text-5xl">Discussões organizadas por assunto.</h1>
+              <h1 className="text-3xl font-black sm:text-4xl md:text-5xl">Discussões organizadas por assunto.</h1>
               <p className="mt-4 max-w-2xl text-[#b9aaa0]">Compartilhe dúvidas, projetos e ideias com a comunidade escolar.</p>
             </div>
 
@@ -197,7 +197,7 @@ export default function ForunsPage() {
                       <h2 className="text-xl font-bold group-hover:text-[#ffd19a]">{category.name}</h2>
                       <p className="mt-2 text-[#b9aaa0]">{category.description || "Categoria sem descrição."}</p>
                     </div>
-                    <span className="h-fit rounded-full bg-[#ff8a3d]/10 px-3 py-1 text-sm text-[#ffd19a]">
+                    <span className="h-fit w-fit shrink-0 rounded-full bg-[#ff8a3d]/10 px-3 py-1 text-sm text-[#ffd19a]">
                       {category.class_name || visibilityLabels[category.visibility] || category.visibility}
                     </span>
                   </div>

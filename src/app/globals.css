@@ -9,3 +9,15 @@ body { margin: 0; background: #11100f; color: #f6efe7; font-family: Arial, Helve
 button, input, select, textarea { font: inherit; }
 button, a { transition: opacity 160ms ease, transform 160ms ease, border-color 160ms ease; }
 button:hover, a:hover { opacity: .9; }
+
+/* Allow grid/flex children and participant-written text to fit narrow screens. */
+.app-shell > * { min-width: 0; }
+.app-shell :where(h1, h2, h3, h4, p, strong) { overflow-wrap: anywhere; }
+:where(a, button, input, select, textarea, summary):focus-visible { outline: 2px solid #ff8a3d; outline-offset: 3px; }
+@media (max-width: 1279px) {
+  .app-shell { align-content: start; }
+}
+@media (max-width: 639px) {
+  input, select, textarea { font-size: 16px; }
+  .app-shell button { min-height: 44px; }
+}
