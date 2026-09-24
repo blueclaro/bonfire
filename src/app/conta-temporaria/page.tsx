@@ -54,7 +54,7 @@ export default function TemporaryAccountPage() {
         options: { data: { temporary_name: name.trim(), temporary_tag: tag } },
       });
       if (signupError || !data.user) {
-        if (signupError?.code === "anonymous_provider_disabled") throw new Error("A entrada temporária ainda não foi habilitada pela organização.");
+        if (signupError?.code === "anonymous_provider_disabled") throw new Error("O login anônimo está desativado no Supabase. A organização precisa ativar Allow anonymous sign-ins e salvar.");
         if (signupError?.status === 429) throw new Error("Limite de entradas atingido nesta rede. Avise quem está apresentando.");
         throw new Error("Não foi possível criar a conta. A tag pode estar em uso ou as inscrições podem ter fechado. Tente outra tag ou avise a organização.");
       }
@@ -89,8 +89,8 @@ export default function TemporaryAccountPage() {
       <button disabled={busy} onClick={() => void leave()} className="block text-sm text-[#ffd19a] underline">Sair desta conta</button>
     </div> : access?.enabled && access.available ? <form onSubmit={submit} className="mt-6 space-y-5 rounded-2xl border border-white/10 bg-white/[.045] p-6">
       <label className="block">Seu nome ou apelido<input required minLength={2} maxLength={32} autoComplete="nickname" value={name} disabled={busy} onChange={e => setName(e.target.value)} placeholder="CharlieLegal" className={input} /></label>
-      <label className="block">Sua tag<span className="mt-2 flex items-center gap-2"><span aria-hidden="true">#</span><input required pattern="[A-Za-z0-9]{1,16}" maxLength={16} autoCapitalize="none" autoCorrect="off" spellCheck={false} value={tag} disabled={busy} onChange={e => setTag(e.target.value)} placeholder="bubu" aria-describedby="tag-help" className={input} /></span></label>
-      <p id="tag-help" className="text-sm text-[#b9aaa0]">Somente letras de A a Z e números. Sem espaços, acentos ou símbolos. Cada tag é exclusiva; Bubu e bubu são a mesma tag.</p>
+      <label className="block">Sua tag<span className="mt-2 flex items-center gap-2"><span aria-hidden="true">#</span><input required pattern="[A-Za-z0-9]{1,4}" maxLength={4} autoCapitalize="none" autoCorrect="off" spellCheck={false} value={tag} disabled={busy} onChange={e => setTag(e.target.value)} placeholder="bubu" aria-describedby="tag-help" className={input} /></span></label>
+      <p id="tag-help" className="text-sm text-[#b9aaa0]">De 1 a 4 caracteres: somente letras de A a Z e números. Sem espaços, acentos ou símbolos. Cada tag é exclusiva; Bubu e bubu são a mesma tag.</p>
       <p className="break-words text-[#ffd19a]">Você aparecerá como <strong>{name.trim() || "CharlieLegal"}#{tag || "bubu"}</strong></p>
       <p className="text-sm text-[#b9aaa0]">Duração: {access.duration_hours} horas. Não saia da conta nem limpe os dados do navegador: não há recuperação por nome ou tag. Suas publicações ficam visíveis à comunidade e sujeitas à moderação.</p>
       <button disabled={busy} className="w-full rounded-full bg-[#ff8a3d] px-5 py-3 font-bold text-[#21140e] disabled:opacity-50">{busy ? "Criando…" : "Criar conta e participar"}</button>

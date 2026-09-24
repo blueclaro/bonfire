@@ -10,9 +10,9 @@ runInNewContext(ts.transpileModule(readFileSync(resolve(__dirname,"../src/lib/te
 }).outputText,{exports:api});
 test("identidade temporária aceita letras e números, mas não símbolos na tag",()=>{
   assert.equal(api.temporaryIdentityError("CharlieLegal","bubu"),"");
-  assert.equal(api.temporaryIdentityError("  João Silva  ","Bubu123"),"");
-  for(const tag of ["á","com espaço","x#","x_","x-","", "x".repeat(17)]) assert.ok(api.temporaryIdentityError("Charlie",tag));
-  for(const name of ["A","A#B","A\nB","A".repeat(33)]) assert.ok(api.temporaryIdentityError(name,"valida"));
+  for (const tag of ["a", "12", "B1b2", "1234"]) assert.equal(api.temporaryIdentityError("  João Silva  ",tag),"");
+  for(const tag of ["á","com espaço","x#","x_","x-","", "abcde", "x".repeat(17)]) assert.ok(api.temporaryIdentityError("Charlie",tag));
+  for(const name of ["A","A#B","A\nB","A".repeat(33)]) assert.ok(api.temporaryIdentityError(name,"bubu"));
 });
 test("QR Code é gerado localmente para a página pública, sem credenciais",async()=>{
   const qr=require("qrcode");

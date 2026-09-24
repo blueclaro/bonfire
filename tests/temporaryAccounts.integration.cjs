@@ -28,7 +28,9 @@ test("contas temporárias: identidade, acesso e expiração no banco", async t =
     `);
     const schema = readFileSync(resolve(__dirname,"../supabase/schema.sql"),"utf8");
     const migration = readFileSync(resolve(__dirname,"../supabase/migrations/20260923_temporary_accounts.sql"),"utf8");
-    assert.ok(schema.trimEnd().endsWith(migration.trimEnd()));
+    assert.ok(schema.includes(migration.trimEnd()));
+    const tagMigration = readFileSync(resolve(__dirname,"../supabase/migrations/20260923_temporary_tag_limit.sql"),"utf8");
+    assert.ok(schema.trimEnd().endsWith(tagMigration.trimEnd()));
     await db.exec(schema.replace(/create extension if not exists pgcrypto;/i,""));
     await db.query("insert into auth.users(id,email) values ($1,'regular@test.invalid')",[regular]);
     await db.query("insert into forum_categories(id,name) values ($1,'Público')",[category]);
@@ -45,10 +47,10 @@ test("contas temporárias: identidade, acesso e expiração no banco", async t =
       await db.exec("update temporary_access_settings set registration_enabled=true");
     });
     await t.test("nome e tag são validados no servidor; tag é exclusiva ignorando caixa",async()=>{
-      for (const tag of ["","com espaço","bubu#","ábc","_teste","a".repeat(17)]) {
+      for (const tag of ["","com espaço","bubu#","ábc","_teste","abcde","a".repeat(17)]) {
         await assert.rejects(create(id(3),"Nome",tag),{code:"22023"});
       }
-      await assert.rejects(create(id(3),"A#B","valida"),{code:"22023"});
+      await assert.rejects(create(id(3),"A#B","bubu"),{code:"22023"});
       await create(guest);
       await assert.rejects(create(id(3),"OutraPessoa","BUBU"),{code:"23505"});
       const profile=(await db.query("select * from profiles where id=$1",[guest])).rows[0];
@@ -79,8 +81,10 @@ test("contas temporárias: identidade, acesso e expiração no banco", async t =
     await t.test("limite de participantes é aplicado atomicamente e reaplicar preserva configuração",async()=>{
       await db.exec("reset role");
       await db.exec("update temporary_access_settings set max_accounts=1");
-      await assert.rejects(create(id(3),"OutroNome","outraTag"),{code:"42501"});
+      await assert.rejects(create(id(3),"OutroNome","nova"),{code:"42501"});
       await db.exec(migration);
+      await db.exec(tagMigration);
+      await db.exec(tagMigration);
       const status=(await db.query("select temporary_access_status() as status")).rows[0].status;
       assert.equal(status.enabled,true);
       assert.equal(status.available,false);

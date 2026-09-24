@@ -321,7 +321,7 @@ e [URLs de redirecionamento](https://supabase.com/docs/guides/auth/redirect-urls
 
 A página `/conta-temporaria` pede somente nome/apelido e tag. A identidade aparece
 como `CharlieLegal#bubu`. O nome aceita 2–32 caracteres sem # ou caracteres de
-controle. A tag aceita 1–16 letras ASCII/números, sem espaços, símbolos ou acentos,
+controle. A tag aceita 1–4 letras ASCII/números, sem espaços, símbolos ou acentos,
 e é exclusiva entre contas temporárias sem distinguir maiúsculas/minúsculas.
 Nome/tag não são credenciais de login e não permitem recuperar uma sessão.
 
@@ -338,8 +338,9 @@ O nome/tag e a validade não podem ser alterados pelo visitante.
    migrações anteriores. Não reaplique migrações antigas depois dela.
 2. No Supabase Auth, habilite **Anonymous Sign-Ins**. Não desative a confirmação
    de e-mail das contas permanentes: é um fluxo independente.
-3. Publique o código atualizado na Vercel.
-4. Apenas quando estiver pronto para testes/apresentação, execute no SQL Editor:
+3. Aplique também `supabase/migrations/20260923_temporary_tag_limit.sql` para limitar novas tags a 4 caracteres. Contas já existentes são preservadas.
+4. Publique o código atualizado na Vercel.
+5. Apenas quando estiver pronto para testes/apresentação, execute no SQL Editor:
 
 ```sql
 update public.temporary_access_settings
