@@ -14,6 +14,12 @@ test("identidade temporária aceita letras e números, mas não símbolos na tag
   for(const tag of ["á","com espaço","x#","x_","x-","", "abcde", "x".repeat(17)]) assert.ok(api.temporaryIdentityError("Charlie",tag));
   for(const name of ["A","A#B","A\nB","A".repeat(33)]) assert.ok(api.temporaryIdentityError(name,"bubu"));
 });
+test("formulário usa a nova identidade de exemplo e explica a combinação única",()=>{
+  const page=readFileSync(resolve(__dirname,"../src/app/conta-temporaria/page.tsx"),"utf8");
+  for(const expected of ['placeholder="NomeDeExemplo"','placeholder="abu"','nome#tag deve ser único'])assert.ok(page.includes(expected),expected);
+  assert.ok(!page.includes('placeholder="CharlieLegal"'));
+  assert.ok(!page.includes('placeholder="bubu"'));
+});
 test("QR Code é gerado localmente para a página pública, sem credenciais",async()=>{
   const qr=require("qrcode");
   const image=await qr.toDataURL("https://bonfire-iota.vercel.app/conta-temporaria",{errorCorrectionLevel:"M"});

@@ -2,8 +2,8 @@
 begin;
 alter table public.profiles add column if not exists temporary_expires_at timestamptz;
 alter table public.profiles add column if not exists temporary_tag text;
-create unique index if not exists profiles_temporary_tag_unique
-  on public.profiles(lower(temporary_tag)) where temporary_tag is not null;
+create unique index if not exists profiles_temporary_identity_unique
+  on public.profiles(lower(display_name)) where temporary_tag is not null;
 
 create table if not exists public.temporary_access_settings (
   id boolean primary key default true check(id),
