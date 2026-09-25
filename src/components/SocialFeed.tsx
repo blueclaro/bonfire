@@ -85,7 +85,7 @@ export default function SocialFeed() {
       const result = await supabase.from('posts').insert({category_id:FEED_CATEGORY, author_id:userId, title:'', content:text.trim(), image_path:path});
       if (result.error) throw new Error('Não foi possível publicar. Confira se sua conta está ativa e tente novamente.');
       setText(''); setFile(null); if (fileInput.current) fileInput.current.value = '';
-      setNotice('Publicado!'); setHashtag(''); setFilter(''); await load();
+      setNotice('Publicado! Atualize o feed quando quiser ver as novas faíscas.');
     } catch (cause) {
       // Do not delete on an ambiguous insert result: the server may have committed it.
       setNotice(cause instanceof Error ? cause.message : 'Falha de conexão. Confira o feed antes de tentar novamente.');
@@ -99,8 +99,14 @@ export default function SocialFeed() {
     try {
       const result = selected ? await supabase.from('post_reactions').delete().eq('post_id',entry.id).eq('user_id',userId).eq('kind',kind) : await supabase.from('post_reactions').insert({post_id:entry.id,user_id:userId,kind});
       if (result.error && result.error.code !== '23505') throw result.error;
+      const duplicate=result.error?.code==='23505';
+      const active=!selected;
+      const delta=duplicate?0:(active?1:-1);
+      setEntries(current=>current.map(item=>item.id!==entry.id?item:{...item,
+        likes:kind==='like'?Math.max(0,item.likes+delta):item.likes,
+        ignites:kind==='ignite'?Math.max(0,item.ignites+delta):item.ignites,
+        liked:kind==='like'?active:item.liked,ignited:kind==='ignite'?active:item.ignited}));
       if (!selected && !result.error) setAnimation({eventId:entry.event_id,kind,key:Date.now()});
-      await load();
     } catch { setNotice('Não foi possível atualizar a interação. Tente novamente.'); }
     finally { acting.current=false; setBusy(''); }
   }
@@ -111,7 +117,7 @@ export default function SocialFeed() {
       const result = await supabase.from('posts').delete().eq('id',entry.id).eq('author_id',userId).select('id');
       if (result.error || !result.data?.length) throw new Error();
       if (entry.image_path) await supabase.storage.from('post-images').remove([entry.image_path]);
-      await load();
+      setEntries(current=>current.filter(item=>item.id!==entry.id));
     } catch { setNotice('Não foi possível excluir. A faísca pode estar protegida pela moderação.'); }
     finally { acting.current=false; setBusy(''); }
   }
@@ -136,9 +142,9 @@ export default function SocialFeed() {
       {entry.image_path && <SignedPostImage path={entry.image_path}/>}
       <div className="mt-3 flex flex-wrap gap-2">{extractHashtags(entry.content).map(tag=><button key={tag} onClick={()=>chooseTag(tag)} className="text-sm text-[#ffd19a]">#{tag}</button>)}</div>
       <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3"><button aria-label={`${entry.likes} curtidas`} title={`${entry.likes} curtidas`} aria-pressed={entry.liked} disabled={!!busy} onClick={()=>void react(entry,'like')} className={`inline-flex h-11 w-11 items-center justify-center rounded-full ${entry.liked?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="like" playKey={animation?.eventId===entry.event_id && animation.kind==="like" ? animation.key : 0}/></button><button aria-label={`${entry.ignites} Ignites`} title={!entry.can_ignite?'Conteúdo restrito não pode receber Ignite':`${entry.ignites} Ignites`} aria-pressed={entry.ignited} disabled={!!busy || !entry.can_ignite} onClick={()=>void react(entry,'ignite')} className={`inline-flex h-11 w-11 items-center justify-center rounded-full disabled:opacity-50 ${entry.ignited?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="ignite" playKey={animation?.eventId===entry.event_id && animation.kind==="ignite" ? animation.key : 0}/></button><button type="button" aria-label={`${entry.comments} comentários`} title={`${entry.comments} comentários`} onClick={()=>setExpanded(current=>current.includes(entry.event_id)?current.filter(id=>id!==entry.event_id):[...current,entry.event_id])} className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/5"><ReactionIcon kind="comment"/></button></div>
-      {expanded.includes(entry.event_id)&&<SparkThread postId={entry.id} userId={userId} locked={entry.is_locked} onChanged={()=>void load()}/>}
+      {expanded.includes(entry.event_id)&&<SparkThread postId={entry.id} userId={userId} locked={entry.is_locked} onChanged={()=>setEntries(current=>current.map(item=>item.id===entry.id?{...item,comments:item.comments+1}:item))}/>}
       {entry.author_id===userId?<button disabled={!!busy} onClick={()=>void remove(entry)} className="mt-3 text-xs text-[#b9aaa0]">Excluir faísca</button>:<ReportButton targetType="post" targetId={entry.id}/>}
-      {entry.author_id!==userId&&['coordination','moderator'].includes(viewerRole)&&<StaffRemoveSpark postId={entry.id} onRemoved={()=>void load()}/>}
+      {entry.author_id!==userId&&['coordination','moderator'].includes(viewerRole)&&<StaffRemoveSpark postId={entry.id} onRemoved={()=>setEntries(current=>current.filter(item=>item.id!==entry.id))}/>}
     </article>)}</div>
     {loading && <p role="status" className="p-6 text-center text-[#b9aaa0]">Carregando feed…</p>}
     {!loading && userId && !error && !entries.length && <p className="rounded-xl border border-dashed border-white/10 p-6 text-[#b9aaa0]">{hashtag?'Nenhuma faísca com essa hashtag.':'A fogueira está acesa. Lance a primeira faísca!'}</p>}
