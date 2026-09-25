@@ -3,7 +3,7 @@ const {readFileSync}=require('node:fs');const {resolve}=require('node:path');con
 function harness(reduced=false){
   let playing=false,previous='',effect,timeout,cleared=false;
   const ref={current:undefined},api={};
-  runInNewContext(ts.transpileModule(readFileSync(resolve(__dirname,'../src/components/ReactionIcon.tsx'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020}}).outputText,{exports:api,window:{matchMedia:()=>({matches:reduced})},setTimeout:(fn,ms)=>{assert.equal(ms,2080);timeout=fn;return 1;},clearTimeout:()=>{cleared=true;},require:name=>name==='react'?{useState:()=>[playing,value=>{playing=value;}],useRef:()=>ref,useEffect:(fn,deps)=>{const key=JSON.stringify(deps);if(previous!==key){previous=key;effect=fn;}}}:require(name)});
+  runInNewContext(ts.transpileModule(readFileSync(resolve(__dirname,'../src/components/ReactionIcon.tsx'),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020}}).outputText,{exports:api,window:{matchMedia:()=>({matches:reduced})},setTimeout:(fn,ms)=>{assert.equal(ms,2400);timeout=fn;return 1;},clearTimeout:()=>{cleared=true;},require:name=>name==='react'?{useState:()=>[playing,value=>{playing=value;}],useRef:()=>ref,useEffect:(fn,deps)=>{const key=JSON.stringify(deps);if(previous!==key){previous=key;effect=fn;}}}:require(name)});
   return {render(props){api.default(props);if(effect){const run=effect;effect=null;run();}return api.default(props);},finish(){timeout();},get cleared(){return cleared;}};
 }
 test('ícones começam parados, inclusive quando não há clique',()=>{
