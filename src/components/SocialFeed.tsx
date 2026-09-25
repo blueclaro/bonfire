@@ -124,7 +124,7 @@ export default function SocialFeed() {
   }
   const chooseTag = (tag: string) => { setFilter(tag); setHashtag(tag); };
   return <section aria-label="Feed da comunidade" className="mx-auto max-w-2xl">
-    <header className="mb-6 flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-[#ffd19a]">Comunidade escolar</p><h1 className="mt-2 text-3xl font-black">Ao redor da fogueira</h1></div><button onClick={() => void load()} disabled={loading} className="rounded-full border border-white/15 px-3 py-2 text-sm">Atualizar</button></header>
+    <header className="mb-6 flex items-center justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-[#ffd19a]">PPO 2026</p><h1 className="mt-2 text-3xl font-black">Ao redor da fogueira</h1></div><button onClick={() => void load()} disabled={loading} className="rounded-full border border-white/15 px-3 py-2 text-sm">Atualizar</button></header>
     {userId ? <form onSubmit={publish} className="mb-6 rounded-2xl border border-[#ff8a3d]/30 bg-white/[.035] p-4">
       <label htmlFor="publication" className="font-semibold">O que está acontecendo?</label>
       <textarea id="publication" value={text} onChange={e=>setText(e.target.value)} disabled={saving} maxLength={5000} rows={4} placeholder="Compartilhe uma ideia, uma dúvida ou um momento. Use #hashtags." className="mt-3 w-full resize-y rounded-xl bg-black/20 p-3 outline-none focus:ring-2 focus:ring-[#ff8a3d]" />
