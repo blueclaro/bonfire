@@ -28,6 +28,7 @@ test('rede social: isolamento, preservação e interações',async t=>{
     const migration=read('supabase/migrations/20260924_social_feed.sql'),storage=read('supabase/migrations/20260924_social_storage.sql');
     await db.exec(migration);await db.exec(storage);
     await db.exec(read('supabase/migrations/20260925_social_connections_threads.sql'));
+    await db.exec(read('supabase/migrations/20260925_ignite_mentions.sql'));
     await db.exec(read('supabase/migrations/20260925_user_chat_groups.sql'));
     await db.exec(read('supabase/migrations/20260925_staff_remove_sparks.sql'));
     for(const [user,name] of [[a,'Alice'],[b,'Bruno'],[staff,'Equipe']]) await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[user,name+'@test.invalid',JSON.stringify({full_name:name})]);
@@ -54,7 +55,7 @@ test('rede social: isolamento, preservação e interações',async t=>{
       assert.equal(data.length,1);assert.equal(data[0].likes,1);assert.equal(data[0].comments,1);assert.equal(data[0].ignites,1);
       await db.query('insert into profile_follows(follower_id,followed_id) values($1,$2)',[b,a]);
       const followed=(await db.query("select social_feed(0,'ppo') as data")).rows[0].data;
-      assert.equal(followed.length,2);assert.equal(followed.find(row=>row.igniter).author_id,guest);
+      assert.equal(followed.length,1);assert.equal(followed[0].igniter.id,a);assert.equal(followed[0].author_id,guest);
       assert.equal((await db.query('select * from posts where id=$1',[privatePost])).rows.length,0);
       await denied(db.query("insert into post_reactions(post_id,user_id,kind) values($1,$2,'ignite')",[privatePost,b]));
       await as(staff);await denied(db.query("insert into post_reactions(post_id,user_id,kind) values($1,$2,'ignite')",[privatePost,staff]));

@@ -50,9 +50,10 @@ export default function SocialFeed() {
       const [result,profile]=await Promise.all([supabase.rpc('social_feed', {page_offset:start, hashtag}),supabase.from('profiles').select('role').eq('id',auth.data.user.id).single()]);
       if (result.error) throw result.error; setViewerRole(profile.data?.role||'');
       if (version !== request.current) return;
-      const next = result.data as Entry[];
-      setEntries(previous => start ? [...previous, ...next.filter(item => !previous.some(old => old.event_id === item.event_id))] : next);
-      setOffset(start + next.length); setMore(next.length === 20);
+      const received = result.data as Entry[];
+      const next = received.filter((item,index) => received.findIndex(candidate => candidate.id === item.id) === index);
+      setEntries(previous => start ? [...previous, ...next.filter(item => !previous.some(old => old.id === item.id))] : next);
+      setOffset(start + received.length); setMore(received.length === 20);
     } catch { if (version === request.current) setError('Não foi possível carregar o feed. Se esta atualização acabou de ser instalada, aplique a migração social no Supabase.'); }
     finally { if (version === request.current) setLoading(false); }
   }, [hashtag]);
