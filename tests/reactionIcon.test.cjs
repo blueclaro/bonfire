@@ -9,6 +9,11 @@ function harness(reduced=false){
 test('ícones começam parados, inclusive quando não há clique',()=>{
   for(const kind of ['like','ignite'])assert.equal(harness().render({kind}).props.src,`/${kind}-still.png`);
 });
+test('coração recebe correção vertical sem deslocar os outros ícones',()=>{
+  assert.ok(harness().render({kind:'like'}).props.className.includes('-translate-y-0.5'));
+  assert.ok(!harness().render({kind:'ignite'}).props.className.includes('-translate-y-0.5'));
+  assert.ok(!harness().render({kind:'comment'}).props.className.includes('-translate-y-0.5'));
+});
 test('reação toca uma vez após carregar e retorna ao frame estático',()=>{
   const h=harness();let icon=h.render({kind:'like',playKey:1});assert.equal(icon.props.src,'/like.gif?play=1');icon.props.onLoad();assert.equal(h.delay,2400);h.finish();assert.equal(h.render({kind:'like',playKey:1}).props.src,'/like-still.png');
   icon=h.render({kind:'like',playKey:2});assert.equal(icon.props.src,'/like.gif?play=2');
