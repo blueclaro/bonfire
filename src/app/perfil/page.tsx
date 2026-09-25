@@ -4,7 +4,7 @@ import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
 import SchoolLabelEditor from "@/components/SchoolLabelEditor";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { clearLocalAuthSession, supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -50,6 +50,7 @@ export default function PerfilPage() {
       const { data: userData, error: userError } = await supabase.auth.getUser();
 
       if (userError || !userData.user) {
+        await clearLocalAuthSession();
         router.replace("/login");
         return;
       }
@@ -62,6 +63,12 @@ export default function PerfilPage() {
           supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", user.id),
           supabase.from("comments").select("id", { count: "exact", head: true }).eq("author_id", user.id),
         ]);
+
+      if (profileResult.error?.code === "PGRST116" || (!profileResult.error && !profileResult.data)) {
+        await clearLocalAuthSession();
+        router.replace(user.is_anonymous ? "/conta-temporaria" : "/login");
+        return;
+      }
 
       if (profileResult.error) {
         setErrorMessage("Não foi possível carregar seu perfil. Confirme se o schema.sql foi executado no Supabase.");
@@ -86,7 +93,7 @@ export default function PerfilPage() {
 
   async function handleLogout() {
     if (profile?.temporary_expires_at && !window.confirm("Sair da conta temporária? Não será possível recuperá-la pelo nome ou tag.")) return;
-    await supabase.auth.signOut({ scope: "local" });
+    await clearLocalAuthSession();
     router.replace("/login");
     router.refresh();
   }

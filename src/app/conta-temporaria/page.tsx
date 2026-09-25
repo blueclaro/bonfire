@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { supabase, isSupabaseConfigured } from "@/lib/supabase";
+import { clearLocalAuthSession, supabase, isSupabaseConfigured } from "@/lib/supabase";
 import { temporaryIdentityError } from "@/lib/temporaryAccount";
 
 type Access = { enabled: boolean; access_enabled: boolean; available: boolean; duration_hours: number };
@@ -30,12 +30,17 @@ export default function TemporaryAccountPage() {
         const auth = await supabase.auth.getUser();
         if (!live) return;
         if (auth.error && auth.error.name !== "AuthSessionMissingError") {
-          await supabase.auth.signOut({ scope: "local" });
+          await clearLocalAuthSession();
           if (live) setExisting(null);
           return;
         }
         if (auth.data.user) {
           const { data, error: profileError } = await supabase.from("profiles").select("display_name,temporary_expires_at").eq("id", auth.data.user.id).single();
+          if (profileError?.code === "PGRST116" || (!profileError && !data)) {
+            await clearLocalAuthSession();
+            if (live) setExisting(null);
+            return;
+          }
           if (profileError) throw profileError;
           if (live) setExisting({ id: auth.data.user.id, temporary: !!data.temporary_expires_at, name: data.display_name, expires: data.temporary_expires_at });
         } else setExisting(null);
@@ -54,7 +59,7 @@ export default function TemporaryAccountPage() {
     sending.current = true; setBusy(true); setError("");
     try {
       const auth = await supabase.auth.getUser();
-      if (auth.error && auth.error.name !== "AuthSessionMissingError") await supabase.auth.signOut({ scope: "local" });
+      if (auth.error && auth.error.name !== "AuthSessionMissingError") await clearLocalAuthSession();
       if (!auth.error && auth.data.user) { setRetry(n => n + 1); return; }
       const { data, error: signupError } = await supabase.auth.signInAnonymously({
         options: { data: { temporary_name: name.trim(), temporary_tag: tag } },
@@ -72,8 +77,7 @@ export default function TemporaryAccountPage() {
     if (!window.confirm("Sair desta conta? Uma conta temporária não pode ser recuperada pelo nome ou tag.")) return;
     setBusy(true);
     try {
-      const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
-      if (signOutError) throw signOutError;
+      await clearLocalAuthSession();
       setExisting(null); setRetry(n => n + 1);
     } catch { setError("Não foi possível sair. Tente novamente."); }
     finally { setBusy(false); }

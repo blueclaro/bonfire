@@ -26,8 +26,17 @@ test("sessão local inválida não bloqueia a consulta da entrada temporária",(
   const access=page.indexOf('setAccess(status.data)');
   const auth=page.indexOf('const auth = await supabase.auth.getUser()',status);
   assert.ok(status>=0 && access>status && auth>access);
-  assert.ok(page.includes('await supabase.auth.signOut({ scope: "local" })'));
+  assert.ok(page.includes('await clearLocalAuthSession()'));
   assert.ok(!page.includes('Promise.all([supabase.rpc("temporary_access_status")'));
+});
+test("usuário excluído ou sem perfil tem a sessão órfã removida",()=>{
+  const temporary=readFileSync(resolve(__dirname,"../src/app/conta-temporaria/page.tsx"),"utf8");
+  const profile=readFileSync(resolve(__dirname,"../src/app/perfil/page.tsx"),"utf8");
+  const client=readFileSync(resolve(__dirname,"../src/lib/supabase.ts"),"utf8");
+  assert.ok(temporary.includes('profileError?.code === "PGRST116"'));
+  assert.ok(profile.includes('profileResult.error?.code === "PGRST116"'));
+  assert.ok(profile.includes('user.is_anonymous ? "/conta-temporaria" : "/login"'));
+  assert.ok(client.includes('window.localStorage.removeItem(authStorageKey)'));
 });
 test("QR Code é gerado localmente para a página pública, sem credenciais",async()=>{
   const qr=require("qrcode");
