@@ -51,6 +51,11 @@ export default function TemporaryAccountPage() {
     return () => { live = false; };
   }, [retry]);
 
+  function refresh() {
+    setAccess(null); setExisting(null); setError("");
+    setRetry(n => n + 1);
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (sending.current) return;
@@ -90,7 +95,7 @@ export default function TemporaryAccountPage() {
     <p className="mt-8 text-sm font-bold uppercase tracking-widest text-[#ffd19a]">Apresentação do Bonfire</p>
     <h1 className="mt-3 text-4xl font-black">Crie sua conta temporária no Bonfire!</h1>
     <p className="mt-4 text-[#b9aaa0]">Sem e-mail e sem senha. Publique faíscas, comente e converse nos grupos.</p>
-    {error && <p role="alert" className="mt-5 text-red-200">{error} <button onClick={() => setRetry(n => n + 1)} className="underline">Atualizar</button></p>}
+    {error && <p role="alert" className="mt-5 text-red-200">{error} <button type="button" disabled={loading} onClick={refresh} className="underline disabled:opacity-50">{loading ? "Atualizando…" : "Atualizar"}</button></p>}
     {loading ? <p role="status" className="mt-6">Verificando entrada…</p> : existing ? <div className="mt-6 space-y-4 rounded-xl border border-white/15 p-6">
       <h2 className="text-xl font-bold">{existing.name}</h2>
       <p>{existing.temporary ? expired ? "Esta conta temporária expirou." : closed ? "A organização encerrou o acesso temporário." : "Sua conta temporária está pronta neste navegador." : "Você já está conectado com sua conta permanente."}</p>

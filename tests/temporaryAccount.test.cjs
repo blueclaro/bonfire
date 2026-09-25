@@ -38,6 +38,11 @@ test("usuário excluído ou sem perfil tem a sessão órfã removida",()=>{
   assert.ok(profile.includes('user.is_anonymous ? "/conta-temporaria" : "/login"'));
   assert.ok(client.includes('window.localStorage.removeItem(authStorageKey)'));
 });
+test("botão atualizar limpa o estado antigo antes de consultar novamente",()=>{
+  const page=readFileSync(resolve(__dirname,"../src/app/conta-temporaria/page.tsx"),"utf8");
+  const refresh=page.slice(page.indexOf('function refresh()'),page.indexOf('async function submit'));
+  for(const expected of ['setAccess(null)','setExisting(null)','setError("")','setRetry(n => n + 1)'])assert.ok(refresh.includes(expected),expected);
+});
 test("QR Code é gerado localmente para a página pública, sem credenciais",async()=>{
   const qr=require("qrcode");
   const image=await qr.toDataURL("https://bonfire-iota.vercel.app/conta-temporaria",{errorCorrectionLevel:"M"});
