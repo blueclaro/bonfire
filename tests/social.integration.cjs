@@ -30,6 +30,7 @@ test('rede social: isolamento, preservação e interações',async t=>{
     await db.exec(read('supabase/migrations/20260925_school_label_digits.sql'));
     await db.exec(read('supabase/migrations/20260925_school_label_letters_numbers.sql'));
     await db.exec(read('supabase/migrations/20260925_social_connections_threads.sql'));
+    await db.exec(read('supabase/migrations/20260925_permanent_profile_tags.sql'));
     await db.exec(read('supabase/migrations/20260925_ignite_mentions.sql'));
     await db.exec(read('supabase/migrations/20260925_temporary_posts_visible_to_permanent_users.sql'));
     await db.exec(read('supabase/migrations/20260925_user_chat_groups.sql'));
@@ -40,6 +41,12 @@ test('rede social: isolamento, preservação e interações',async t=>{
     await db.query("insert into auth.users(id,is_anonymous,raw_user_meta_data) values($1,true,$2)",[guest,JSON.stringify({temporary_name:'Charlie',temporary_tag:'eba'})]);
     await db.query("insert into forum_categories(id,name,visibility,class_name) values($1,'Turma restrita','class','Secreta')",[category]);
     await db.query("insert into posts(id,category_id,author_id,title,content) values($1,$2,$3,'Legado privado','Conteúdo privado preservado')",[privatePost,category,staff]);
+    await t.test('perfis permanentes usam combinações nome#tag únicas',async()=>{
+      await as(a);await db.query("update profiles set username='charlie#abu' where id=$1",[a]);
+      await as(b);await db.query("update profiles set username='charlie#ebaa' where id=$1",[b]);
+      await db.query("update profiles set username='briel#abu' where id=$1",[b]);
+      await assert.rejects(db.query("update profiles set username='CHARLIE#ABU' where id=$1",[b]),{code:'23505'});
+    });
     await t.test('publicação sem título e conta temporária podem publicar e comentar',async()=>{
       await as(guest);
       await db.query("insert into posts(id,category_id,author_id,title,content) values($1,$2,$3,'','Olá #PPO')",[post,feed,guest]);

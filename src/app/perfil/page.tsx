@@ -109,8 +109,8 @@ export default function PerfilPage() {
       return;
     }
 
-    if (!/^[a-z0-9_!*/.+-]{3,24}$/i.test(cleanUsername)) {
-      setSaveMessage("O @ deve ter de 3 a 24 caracteres, sem espaços. Use letras, números ou _ ! * / . + -.");
+    if (!/^[a-z0-9_!*/.+-]{3,24}(#[a-z0-9]{1,4})?$/i.test(cleanUsername)) {
+      setSaveMessage("Use nome#tag, sem espaços. A tag pode ter até 4 letras ou números.");
       return;
     }
 
@@ -213,7 +213,7 @@ export default function PerfilPage() {
                   Nome de usuário
                   <div className="mt-2 flex rounded-lg border border-white/10 bg-black/20 focus-within:border-[#ff8a3d]">
                     <span className="px-4 py-3 text-[#7d7068]">@</span>
-                    <input value={usernameInput} onChange={(event) => setUsernameInput(event.target.value)} maxLength={24} className="min-w-0 flex-1 bg-transparent py-3 pr-4 text-[#f6efe7] outline-none" />
+                    <input value={usernameInput} onChange={(event) => setUsernameInput(event.target.value)} maxLength={29} className="min-w-0 flex-1 bg-transparent py-3 pr-4 text-[#f6efe7] outline-none" />
                   </div>
                 </label>
 
