@@ -5,8 +5,9 @@ import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import ChatGroupCreator from "@/components/ChatGroupCreator";
 
-type Room = { id: string; name: string; description: string | null };
+type Room = { id: string; name: string; description: string | null; created_by:string|null; is_private:boolean };
 type Author = { display_name: string | null; username: string | null };
 type Message = { id: string; content: string; created_at: string; updated_at: string; author_id: string; author: Author | null };
 
@@ -75,9 +76,9 @@ export default function ChatsPage() {
       }
 
       setCurrentUserId(userData.user.id);
-      const { data, error } = await supabase.from("chat_rooms").select("id, name, description").order("name");
+      const { data, error } = await supabase.from("chat_rooms").select("id, name, description, created_by, is_private").is("archived_at",null).order("name");
       if (error) {
-        setErrorMessage(`Não foi possível carregar as salas: ${error.message}`);
+        setErrorMessage(`Não foi possível carregar os grupos: ${error.message}`);
       } else {
         setRooms(data ?? []);
         setSelectedRoomId((current) => current || data?.[0]?.id || "");
@@ -172,27 +173,35 @@ export default function ChatsPage() {
     await loadMessages();
   }
 
+  async function deleteGroup(roomId:string){
+    if(!window.confirm("Excluir este grupo e todas as mensagens? Esta ação não pode ser desfeita."))return;
+    const result=await supabase.rpc("delete_chat_group",{room_uuid:roomId});
+    if(result.error){setErrorMessage("Não foi possível excluir o grupo.");return;}
+    setRooms(current=>current.filter(room=>room.id!==roomId));setSelectedRoomId("");setMessages([]);
+  }
+
   return (
     <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
       <section className="app-shell grid min-h-screen xl:grid-cols-[260px_320px_1fr]">
         <Sidebar active="chats" showRooms={false} />
         <aside className="border-b border-white/10 p-5 xl:border-b-0 xl:border-r">
           <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">Chats</p>
-          <h1 className="mb-5 text-3xl font-black">Salas</h1>
+          <h1 className="mb-5 text-3xl font-black">Grupos</h1>
+          <ChatGroupCreator/>
           <div className="flex gap-3 overflow-x-auto pb-2 xl:grid xl:grid-cols-1 xl:overflow-visible">
-            {loadingRooms ? <p className="text-sm text-[#b9aaa0]">Carregando salas...</p> : rooms.length ? rooms.map((room) => (
+            {loadingRooms ? <p className="text-sm text-[#b9aaa0]">Carregando grupos...</p> : rooms.length ? rooms.map((room) => (
               <button type="button" key={room.id} onClick={() => setSelectedRoomId(room.id)} className={`w-52 shrink-0 rounded-xl border p-4 xl:w-auto text-left ${selectedRoomId === room.id ? "border-[#ff8a3d]/50 bg-[#ff8a3d]/10" : "border-white/10 bg-white/[.045] hover:border-white/20"}`}>
-                <strong>{room.name}</strong>
-                <p className="mt-2 text-sm text-[#b9aaa0]">{room.description || "Sala da comunidade"}</p>
+                <strong>{room.is_private?"🔒 ":""}{room.name}</strong>
+                <p className="mt-2 text-sm text-[#b9aaa0]">{room.description || "Grupo da comunidade"}</p>
               </button>
-            )) : <p className="rounded-xl border border-dashed border-white/10 p-4 text-sm text-[#b9aaa0]">Nenhuma sala disponível.</p>}
+            )) : <p className="rounded-xl border border-dashed border-white/10 p-4 text-sm text-[#b9aaa0]">Nenhum grupo ainda. Crie o primeiro.</p>}
           </div>
         </aside>
 
         <section className="grid h-[75dvh] min-h-[360px] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden xl:h-dvh">
           <header className="border-b border-white/10 p-5">
-            <h2 className="text-2xl font-bold">{selectedRoom ? `# ${selectedRoom.name}` : "Selecione uma sala"}</h2>
-            <p className="text-sm text-[#b9aaa0]">{selectedRoom?.description || "Escolha uma sala para conversar."}</p>
+            <div className="flex items-center justify-between gap-4"><h2 className="text-2xl font-bold">{selectedRoom ? `${selectedRoom.is_private?"🔒 ":""}${selectedRoom.name}` : "Selecione um grupo"}</h2>{selectedRoom?.created_by===currentUserId&&<button type="button" onClick={()=>void deleteGroup(selectedRoom.id)} className="text-xs text-red-300">Excluir grupo</button>}</div>
+            <p className="text-sm text-[#b9aaa0]">{selectedRoom?.description || "Escolha um grupo para conversar."}</p>
           </header>
           <div aria-live="polite" className="min-h-0 space-y-4 overflow-y-auto overscroll-contain p-4 md:p-6">
             {errorMessage && <p className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-sm text-red-200">{errorMessage}</p>}
@@ -202,7 +211,7 @@ export default function ChatsPage() {
             <div ref={messagesEndRef} />
           </div>
           <form onSubmit={handleSend} className="flex gap-3 border-t border-white/10 p-5">
-            <input aria-label="Mensagem" value={content} onChange={(event) => setContent(event.target.value)} disabled={!selectedRoom || sending} maxLength={2000} className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 outline-none focus:border-[#ff8a3d] disabled:cursor-not-allowed disabled:opacity-50" placeholder={selectedRoom ? "Enviar mensagem..." : "Selecione uma sala"} />
+            <input aria-label="Mensagem" value={content} onChange={(event) => setContent(event.target.value)} disabled={!selectedRoom || sending} maxLength={2000} className="min-w-0 flex-1 rounded-full border border-white/10 bg-white/5 px-5 py-3 outline-none focus:border-[#ff8a3d] disabled:cursor-not-allowed disabled:opacity-50" placeholder={selectedRoom ? "Enviar mensagem..." : "Selecione um grupo"} />
             <button type="submit" aria-label="Enviar mensagem" disabled={!selectedRoom || sending || !content.trim()} className="h-12 w-12 shrink-0 rounded-full bg-[#ff8a3d] text-xl font-black text-[#21140e] disabled:cursor-not-allowed disabled:opacity-50">{sending ? "…" : "›"}</button>
           </form>
         </section>

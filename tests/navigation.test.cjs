@@ -18,7 +18,7 @@ function renderSidebar(open) {
     if (name.startsWith('@/components/')) return { default: () => null };
     return require(name);
   }});
-  return renderToStaticMarkup(React.createElement(api.default, { active: 'foruns' }));
+  return renderToStaticMarkup(React.createElement(api.default, { active: 'inicio' }));
 }
 
 test('menu mobile inicia fechado e mantém navegação desktop acessível', () => {
@@ -26,7 +26,8 @@ test('menu mobile inicia fechado e mantém navegação desktop acessível', () =
   assert.match(html, /aria-expanded="false"/);
   assert.match(html, /aria-controls="main-navigation"/);
   assert.match(html, /id="main-navigation" data-open="false" class="mobile-navigation"/);
-  assert.match(html, /href="\/foruns" aria-current="page"/);
+  assert.match(html, /href="\/" aria-current="page"/);
+  assert.doesNotMatch(html, /href="\/foruns"|Salas ativas/);
   assert.doesNotMatch(html, /Crie sua conta temporária|href="\/conta-temporaria"/);
 });
 
@@ -35,7 +36,7 @@ test('menu aberto expõe links e ação para fechar', () => {
   assert.match(html, /aria-expanded="true"/);
   assert.match(html, />Fechar<\/button>/);
   assert.match(html, /id="main-navigation" data-open="true" class="mobile-navigation"/);
-  for (const href of ['/', '/foruns', '/chats', '/avisos', '/perfil']) assert.ok(html.includes(`href="${href}"`));
+  for (const href of ['/', '/mensagens', '/chats', '/avisos', '/perfil']) assert.ok(html.includes(`href="${href}"`));
 });
 
 test('animação respeita movimento reduzido e tópicos oferecem acesso ao formulário', () => {

@@ -7,6 +7,7 @@ import SignedPostImage from '@/components/SignedPostImage';
 import ReportButton from '@/components/ReportButton';
 import Avatar from '@/components/SocialAvatar';
 import ReactionIcon from '@/components/ReactionIcon';
+import SparkThread from '@/components/SparkThread';
 
 type Entry = { event_id: string; id: string; title: string; content: string; image_path: string | null; author_id: string; author: SocialAuthor | null; igniter: SocialAuthor | null; created_at: string; event_at: string; is_locked: boolean; can_ignite: boolean; likes: number; comments: number; ignites: number; liked: boolean; ignited: boolean };
 export default function SocialFeed() {
@@ -25,6 +26,7 @@ export default function SocialFeed() {
   const [more, setMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [animation, setAnimation] = useState<{eventId:string;kind:string;key:number} | null>(null);
+  const [expanded,setExpanded]=useState<string[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const request = useRef(0);
   const sending = useRef(false);
@@ -101,14 +103,14 @@ export default function SocialFeed() {
     finally { acting.current=false; setBusy(''); }
   }
   async function remove(entry: Entry) {
-    if (acting.current || !window.confirm('Excluir esta publicação e seus comentários? Esta ação não pode ser desfeita.')) return;
+    if (acting.current || !window.confirm('Excluir esta faísca e seus comentários? Esta ação não pode ser desfeita.')) return;
     acting.current = true; setBusy(entry.id);
     try {
       const result = await supabase.from('posts').delete().eq('id',entry.id).eq('author_id',userId).select('id');
       if (result.error || !result.data?.length) throw new Error();
       if (entry.image_path) await supabase.storage.from('post-images').remove([entry.image_path]);
       await load();
-    } catch { setNotice('Não foi possível excluir. A publicação pode estar protegida pela moderação.'); }
+    } catch { setNotice('Não foi possível excluir. A faísca pode estar protegida pela moderação.'); }
     finally { acting.current=false; setBusy(''); }
   }
   const chooseTag = (tag: string) => { setFilter(tag); setHashtag(tag); };
@@ -124,18 +126,19 @@ export default function SocialFeed() {
     {notice && <p role="status" className="mb-4 rounded-xl border border-white/15 p-3">{notice}</p>}
     {userId && <form onSubmit={e=>{e.preventDefault();chooseTag(filter.trim().replace(/^#/,''));}} className="mb-4 flex gap-2"><input aria-label="Filtrar por hashtag" value={filter} onChange={e=>setFilter(e.target.value)} maxLength={40} placeholder="Buscar #hashtag" className="min-w-0 flex-1 rounded-full border border-white/15 bg-white/5 px-4 py-2"/><button className="rounded-full border border-white/15 px-4 py-2">Filtrar</button>{hashtag && <button type="button" onClick={()=>chooseTag('')} className="text-[#ffd19a]">Limpar</button>}</form>}
     {error && <p role="alert" className="mb-4 text-red-200">{error}</p>}
-    <div className="space-y-4">{entries.map(entry=><article key={entry.event_id} className="rounded-2xl border border-white/10 bg-white/[.035] p-4 sm:p-5">
+    <div className="space-y-4">{entries.map(entry=><article key={entry.event_id} onClick={event=>{if(!(event.target as HTMLElement).closest('button,a,input,textarea,form'))setExpanded(current=>current.includes(entry.event_id)?current.filter(id=>id!==entry.event_id):[...current,entry.event_id]);}} className="cursor-pointer rounded-2xl border border-white/10 bg-white/[.035] p-4 sm:p-5">
       {entry.igniter && <p className="mb-3 text-xs text-[#ffd19a]"><ReactionIcon kind="ignite"/> <Link href={`/pessoas/${entry.igniter.id}`}>{socialHandle(entry.igniter)}</Link> deu um Ignite</p>}
-      <div className="flex items-center gap-3"><Link href={`/pessoas/${entry.author_id}`} className="flex min-w-0 items-center gap-3"><Avatar author={entry.author}/><span className="break-all font-bold">{socialHandle(entry.author)}</span></Link><Link href={`/foruns/topico/${entry.id}`} className="ml-auto shrink-0 text-xs text-[#b9aaa0]" aria-label="Abrir publicação">{new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',timeZone:'America/Sao_Paulo'}).format(new Date(entry.created_at))}</Link></div>
+      <div className="flex items-center gap-3"><Link href={`/pessoas/${entry.author_id}`} className="flex min-w-0 items-center gap-3"><Avatar author={entry.author}/><span className="break-all font-bold">{socialHandle(entry.author)}</span></Link><Link href={`/foruns/topico/${entry.id}`} className="ml-auto shrink-0 text-xs text-[#b9aaa0]" aria-label="Abrir faísca">{new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',timeZone:'America/Sao_Paulo'}).format(new Date(entry.created_at))}</Link></div>
       {entry.title && <p className="mt-4 font-bold">{entry.title}</p>}
       <p className="mt-3 whitespace-pre-wrap [overflow-wrap:anywhere]">{entry.content}</p>
       {entry.image_path && <SignedPostImage path={entry.image_path}/>}
       <div className="mt-3 flex flex-wrap gap-2">{extractHashtags(entry.content).map(tag=><button key={tag} onClick={()=>chooseTag(tag)} className="text-sm text-[#ffd19a]">#{tag}</button>)}</div>
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3 text-sm"><button aria-pressed={entry.liked} disabled={!!busy} onClick={()=>void react(entry,'like')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 ${entry.liked?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="like" playKey={animation?.eventId===entry.event_id && animation.kind==="like" ? animation.key : 0}/> {entry.likes} Curtidas</button><Link href={`/foruns/topico/${entry.id}#novo-comentario`} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-white/5 px-3"><ReactionIcon kind="comment"/> {entry.comments} Comentários</Link><button aria-pressed={entry.ignited} disabled={!!busy || !entry.can_ignite} title={!entry.can_ignite?'Conteúdo restrito não pode ser repostado':undefined} onClick={()=>void react(entry,'ignite')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 disabled:opacity-50 ${entry.ignited?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="ignite" playKey={animation?.eventId===entry.event_id && animation.kind==="ignite" ? animation.key : 0}/> {entry.ignites} Ignites</button></div>
-      {entry.author_id===userId?<button disabled={!!busy} onClick={()=>void remove(entry)} className="mt-3 text-xs text-[#b9aaa0]">Excluir publicação</button>:<ReportButton targetType="post" targetId={entry.id}/>}
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3 text-sm"><button aria-pressed={entry.liked} disabled={!!busy} onClick={()=>void react(entry,'like')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 ${entry.liked?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="like" playKey={animation?.eventId===entry.event_id && animation.kind==="like" ? animation.key : 0}/> {entry.likes} Curtidas</button><button type="button" onClick={()=>setExpanded(current=>current.includes(entry.event_id)?current.filter(id=>id!==entry.event_id):[...current,entry.event_id])} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-white/5 px-3"><ReactionIcon kind="comment"/> {entry.comments} Comentários</button><button aria-pressed={entry.ignited} disabled={!!busy || !entry.can_ignite} title={!entry.can_ignite?'Conteúdo restrito não pode receber Ignite':undefined} onClick={()=>void react(entry,'ignite')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 disabled:opacity-50 ${entry.ignited?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="ignite" playKey={animation?.eventId===entry.event_id && animation.kind==="ignite" ? animation.key : 0}/> {entry.ignites} Ignites</button></div>
+      {expanded.includes(entry.event_id)&&<SparkThread postId={entry.id} userId={userId} locked={entry.is_locked} onChanged={()=>void load()}/>}
+      {entry.author_id===userId?<button disabled={!!busy} onClick={()=>void remove(entry)} className="mt-3 text-xs text-[#b9aaa0]">Excluir faísca</button>:<ReportButton targetType="post" targetId={entry.id}/>}
     </article>)}</div>
     {loading && <p role="status" className="p-6 text-center text-[#b9aaa0]">Carregando feed…</p>}
-    {!loading && userId && !error && !entries.length && <p className="rounded-xl border border-dashed border-white/10 p-6 text-[#b9aaa0]">{hashtag?'Nenhuma publicação com essa hashtag.':'A fogueira está acesa. Faça a primeira publicação!'}</p>}
+    {!loading && userId && !error && !entries.length && <p className="rounded-xl border border-dashed border-white/10 p-6 text-[#b9aaa0]">{hashtag?'Nenhuma faísca com essa hashtag.':'A fogueira está acesa. Lance a primeira faísca!'}</p>}
     {more && <button disabled={loading} onClick={()=>void load(offset)} className="my-5 w-full rounded-full border border-white/15 p-3">Carregar mais</button>}
   </section>;
 }

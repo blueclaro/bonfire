@@ -27,6 +27,8 @@ test('rede social: isolamento, preservação e interações',async t=>{
     await db.exec(read('supabase/schema.sql').replace(/create extension if not exists pgcrypto;/i,''));
     const migration=read('supabase/migrations/20260924_social_feed.sql'),storage=read('supabase/migrations/20260924_social_storage.sql');
     await db.exec(migration);await db.exec(storage);
+    await db.exec(read('supabase/migrations/20260925_social_connections_threads.sql'));
+    await db.exec(read('supabase/migrations/20260925_user_chat_groups.sql'));
     for(const [user,name] of [[a,'Alice'],[b,'Bruno'],[staff,'Equipe']]) await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[user,name+'@test.invalid',JSON.stringify({full_name:name})]);
     await db.query("update profiles set role='moderator' where id=$1",[staff]);
     await db.exec('update temporary_access_settings set registration_enabled=true');
@@ -48,11 +50,21 @@ test('rede social: isolamento, preservação e interações',async t=>{
       await as(b);
       assert.equal((await db.query('delete from post_reactions where user_id=$1 returning *',[a])).rows.length,0);
       const data=(await db.query("select social_feed(0,'ppo') as data")).rows[0].data;
-      assert.equal(data.length,2);assert.equal(data[0].likes,1);assert.equal(data[0].comments,1);assert.equal(data[0].ignites,1);
-      assert.equal(data.find(row=>row.igniter).author_id,guest);
+      assert.equal(data.length,1);assert.equal(data[0].likes,1);assert.equal(data[0].comments,1);assert.equal(data[0].ignites,1);
+      await db.query('insert into profile_follows(follower_id,followed_id) values($1,$2)',[b,a]);
+      const followed=(await db.query("select social_feed(0,'ppo') as data")).rows[0].data;
+      assert.equal(followed.length,2);assert.equal(followed.find(row=>row.igniter).author_id,guest);
       assert.equal((await db.query('select * from posts where id=$1',[privatePost])).rows.length,0);
       await denied(db.query("insert into post_reactions(post_id,user_id,kind) values($1,$2,'ignite')",[privatePost,b]));
       await as(staff);await denied(db.query("insert into post_reactions(post_id,user_id,kind) values($1,$2,'ignite')",[privatePost,staff]));
+    });
+    await t.test('threads validam a faísca e notificações mostram o comentário',async()=>{
+      const root=id(31),reply=id(32);
+      await as(a);await db.query("insert into comments(id,post_id,author_id,content) values($1,$2,$3,'Comentário visível na notificação')",[root,post,a]);
+      await as(b);await db.query("insert into comments(id,post_id,author_id,parent_id,content) values($1,$2,$3,$4,'Resposta encadeada')",[reply,post,b,root]);
+      await as(guest);assert.match((await db.query("select message from notifications where source_id=$1",[root])).rows[0].message,/Comentário visível/);
+      await as(a);assert.match((await db.query("select message from notifications where source_id=$1",[reply])).rows[0].message,/Resposta encadeada/);
+      await as(b);await assert.rejects(db.query("insert into comments(post_id,author_id,parent_id,content) values($1,$2,$3,'Post diferente')",[privatePost,b,root]),{code:'22023'});
     });
     await t.test('etiqueta de turma não concede acesso nem altera identidade temporária',async()=>{
       await as(guest);await db.query("select set_school_label('Secreta')");
@@ -68,6 +80,14 @@ test('rede social: isolamento, preservação e interações',async t=>{
       await as(b);assert.equal((await db.query('select * from direct_messages')).rows.length,1);
       await as(staff);assert.equal((await db.query('select * from direct_messages')).rows.length,0);
       await denied(db.query("update direct_messages set content='Alterada'"));
+    });
+    await t.test('grupos privados só aparecem para membros e podem ser excluídos pelo criador',async()=>{
+      await as(a);const room=(await db.query("select create_chat_group('Equipe','Privado',true,array[$1::uuid]) as id",[b])).rows[0].id;
+      await db.query("insert into chat_messages(room_id,author_id,content) values($1,$2,'Segredo')",[room,a]);
+      await as(b);assert.equal((await db.query('select * from chat_rooms where id=$1',[room])).rows.length,1);assert.equal((await db.query('select * from chat_messages where room_id=$1',[room])).rows.length,1);
+      await as(staff);assert.equal((await db.query('select * from chat_rooms where id=$1',[room])).rows.length,0);
+      await denied(db.query('select delete_chat_group($1)',[room]));
+      await as(a);await db.query('select delete_chat_group($1)',[room]);assert.equal((await db.query('select * from chat_rooms where id=$1',[room])).rows.length,0);
     });
     await t.test('bloqueio impede envio nas duas direções sem apagar histórico',async()=>{
       await as(b);await db.query('insert into user_blocks values($1,$2)',[b,a]);

@@ -5,8 +5,10 @@ import { useRef, useState } from "react";
 import Sidebar from "@/components/Sidebar";
 import { useNotifications } from "@/lib/useNotifications";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
 export default function NotificationsPage() {
+  const router = useRouter();
   const [page, setPage] = useState(0);
   const { userId, authReady, loading, items, count, error, hasMore, refresh } = useNotifications(true, page);
   const [busy, setBusy] = useState("");
@@ -16,7 +18,7 @@ export default function NotificationsPage() {
   currentUser.current = userId;
 
   async function markRead(id: string) {
-    if (saving.current) return;
+    if (saving.current) return false;
     saving.current = true;
     const owner = userId;
     setBusy(id); setActionError("");
@@ -26,16 +28,23 @@ export default function NotificationsPage() {
       if (readError) throw readError;
       window.dispatchEvent(new Event("bonfire:notifications-read"));
       refresh();
+      return true;
     } catch {
       if (currentUser.current === owner) setActionError("Não foi possível marcar como lida. Tente novamente.");
+      return false;
     } finally { saving.current = false; setBusy(""); }
+  }
+
+  async function openNotification(id:string,destination:string,read:boolean){
+    if(!read) await markRead(id);
+    router.push(destination);
   }
 
   return <main className="min-h-screen bg-[#100f0e] text-[#f6efe7] app-shell xl:grid xl:grid-cols-[260px_1fr]">
     <Sidebar active="notificacoes" showRooms={false} />
     <section className="mx-auto w-full max-w-4xl p-5 md:p-10">
       <h1 className="text-3xl font-black">Notificações</h1>
-      <p className="mt-3 text-[#b9aaa0]">Comentários nos seus tópicos e decisões da moderação sobre seus conteúdos.</p>
+      <p className="mt-3 text-[#b9aaa0]">Comentários nas suas faíscas e decisões da moderação sobre seus conteúdos.</p>
       {authReady && !userId ? <p className="mt-6"><Link className="text-[#ffd19a] underline" href="/login">Entre na sua conta</Link> para consultar suas notificações.</p> : <>
         <div className="my-6 flex items-center gap-4">
           <p aria-live="polite">{count === null ? "Contador indisponível" : `${count} não lida${count === 1 ? "" : "s"}`}</p>
@@ -51,9 +60,9 @@ export default function NotificationsPage() {
             </div>
             <time className="mt-2 block text-xs text-[#b9aaa0]">{new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(new Date(item.created_at))}</time>
             {item.reason && <div className="mt-4"><h3 className="text-sm font-bold text-[#ffd19a]">Motivo informado pela moderação</h3><p className="mt-2 whitespace-pre-wrap break-words">{item.reason}</p></div>}
-            {item.kind !== "comment" && <p className="mt-3 text-xs text-[#b9aaa0]">A restauração respeita as permissões e a situação do tópico. Conteúdos removidos não podem ser abertos.</p>}
+            {item.kind !== "comment" && <p className="mt-3 text-xs text-[#b9aaa0]">A restauração respeita as permissões e a situação da faísca. Conteúdos removidos não podem ser abertos.</p>}
             <div className="mt-4 flex flex-wrap items-center gap-4">
-              {/^\/(foruns\/topico\/[0-9a-f-]+|chats)$/.test(item.destination) && <Link href={item.destination} className="text-sm text-[#ffd19a] underline">{item.destination === "/chats" ? "Abrir chats" : "Abrir tópico"}</Link>}
+              {/^\/(foruns\/topico\/[0-9a-f-]+|chats)$/.test(item.destination) && <button type="button" disabled={busy===item.id} onClick={()=>void openNotification(item.id,item.destination,!!item.read_at)} className="text-sm text-[#ffd19a] underline">{item.destination === "/chats" ? "Abrir chats" : "Abrir faísca"}</button>}
               {!item.read_at && <button disabled={!!busy} onClick={() => void markRead(item.id)} className="rounded-full border border-white/20 px-4 py-2 text-sm disabled:opacity-50">{busy === item.id ? "Salvando…" : "Marcar como lida"}</button>}
             </div>
           </article>)}</div>

@@ -102,8 +102,8 @@ export default function PerfilPage() {
       return;
     }
 
-    if (!/^[a-z0-9._-]{3,24}$/.test(cleanUsername)) {
-      setSaveMessage("O usuário deve ter de 3 a 24 caracteres: letras, números, ponto, traço ou _.");
+    if (!/^[a-z0-9_!*/.+-]{3,24}$/i.test(cleanUsername)) {
+      setSaveMessage("O @ deve ter de 3 a 24 caracteres, sem espaços. Use letras, números ou _ ! * / . + -.");
       return;
     }
 
@@ -236,22 +236,22 @@ export default function PerfilPage() {
 
           <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
             <section>
-              <h2 className="mb-4 text-2xl font-bold">Publicações recentes</h2>
+              <h2 className="mb-4 text-2xl font-bold">Faíscas recentes</h2>
               <div className="grid gap-3">
                 {posts.length > 0 ? posts.map((post) => (
                   <article key={post.id} className="rounded-xl border border-white/10 bg-white/[.045] p-5">
-                    <h3 className="text-xl font-bold"><Link href={`/foruns/topico/${post.id}`}>{post.title || post.content.slice(0,120) || "Publicação com imagem"}</Link></h3>
+                    <h3 className="text-xl font-bold"><Link href={`/foruns/topico/${post.id}`}>{post.title || post.content.slice(0,120) || "Faísca com imagem"}</Link></h3>
                     <p className="mt-2 text-sm text-[#7d7068]">{new Intl.DateTimeFormat("pt-BR", { dateStyle: "medium", timeStyle: "short" }).format(new Date(post.created_at))}</p>
                   </article>
                 )) : (
-                  <div className="rounded-xl border border-dashed border-white/10 p-6 text-[#b9aaa0]">Você ainda não criou nenhuma publicação.</div>
+                  <div className="rounded-xl border border-dashed border-white/10 p-6 text-[#b9aaa0]">Você ainda não criou nenhuma faísca.</div>
                 )}
               </div>
             </section>
             <aside>
               <div className="rounded-xl border border-white/10 bg-white/[.045] p-5">
                 <h2 className="text-xl font-bold">Participação</h2>
-                <StatCard label="Tópicos criados" value={String(postCount)} />
+                <StatCard label="Faíscas criadas" value={String(postCount)} />
                 <StatCard label="Comentários" value={String(commentCount)} />
               </div>
             </aside>

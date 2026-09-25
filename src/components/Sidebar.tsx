@@ -11,13 +11,12 @@ type Active = "inicio" | "foruns" | "chats" | "avisos" | "perfil" | "denuncias" 
 const items: { label: string; href: string; key: Active }[] = [
   { label: "Feed", href: "/", key: "inicio" },
   { label: "Mensagens", href: "/mensagens", key: "mensagens" },
-  { label: "Fóruns", href: "/foruns", key: "foruns" },
   { label: "Chats", href: "/chats", key: "chats" },
   { label: "Avisos", href: "/avisos", key: "avisos" },
   { label: "Perfil", href: "/perfil", key: "perfil" },
 ];
 
-export default function Sidebar({ active, showRooms = true }: { active: Active; showRooms?: boolean }) {
+export default function Sidebar({ active, showRooms: _showRooms = false }: { active: Active; showRooms?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
   return <aside className="min-w-0 self-start border-b border-white/10 p-4 xl:min-h-screen xl:border-b-0 xl:border-r xl:p-6" onKeyDown={event => { if (event.key === "Escape") setMenuOpen(false); }}>
     <div className="flex items-center justify-between gap-3 xl:mb-10">
@@ -37,9 +36,5 @@ export default function Sidebar({ active, showRooms = true }: { active: Active; 
     <TemporarySessionNotice />
     </div></div>
     </div>
-    {showRooms && <div className="mt-8 hidden border-t border-white/10 pt-6 xl:block">
-      <p className="mb-3 text-xs uppercase tracking-[.2em] text-[#7d7068]">Salas ativas</p>
-      <div className="space-y-3 text-sm text-[#b9aaa0]"><p># 2º informática</p><p># dúvidas enem</p><p># trabalhos</p><p># eventos</p></div>
-    </div>}
   </aside>;
 }
