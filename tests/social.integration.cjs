@@ -28,6 +28,7 @@ test('rede social: isolamento, preservação e interações',async t=>{
     const migration=read('supabase/migrations/20260924_social_feed.sql'),storage=read('supabase/migrations/20260924_social_storage.sql');
     await db.exec(migration);await db.exec(storage);
     await db.exec(read('supabase/migrations/20260925_school_label_digits.sql'));
+    await db.exec(read('supabase/migrations/20260925_school_label_letters_numbers.sql'));
     await db.exec(read('supabase/migrations/20260925_social_connections_threads.sql'));
     await db.exec(read('supabase/migrations/20260925_ignite_mentions.sql'));
     await db.exec(read('supabase/migrations/20260925_user_chat_groups.sql'));
@@ -69,14 +70,14 @@ test('rede social: isolamento, preservação e interações',async t=>{
       await as(a);assert.match((await db.query("select message from notifications where source_id=$1",[reply])).rows[0].message,/Resposta encadeada/);
       await as(b);await assert.rejects(db.query("insert into comments(post_id,author_id,parent_id,content) values($1,$2,$3,'Post diferente')",[privatePost,b,root]),{code:'22023'});
     });
-    await t.test('etiqueta numérica de turma não concede acesso nem altera identidade temporária',async()=>{
-      await as(guest);await db.query("select set_school_label('12345')");
+    await t.test('etiqueta alfanumérica de turma não concede acesso nem altera identidade temporária',async()=>{
+      await as(guest);await db.query("select set_school_label('IA24')");
       const p=(await db.query('select * from profiles where id=$1',[guest])).rows[0];
-      assert.equal(p.school_label,'12345');assert.equal(p.class_name,null);assert.equal(p.temporary_tag,'eba');
+      assert.equal(p.school_label,'IA24');assert.equal(p.class_name,null);assert.equal(p.temporary_tag,'eba');
       assert.equal((await db.query('select * from posts where id=$1',[privatePost])).rows.length,0);
       await denied(db.query("update profiles set school_label='Forjada' where id=$1",[b]));
       await assert.rejects(db.query('select set_school_label($1)',['123456']),{code:'22023'});
-      await assert.rejects(db.query('select set_school_label($1)',['12A']),{code:'22023'});
+      await assert.rejects(db.query('select set_school_label($1)',['IA 24']),{code:'22023'});
     });
     await t.test('mensagens só podem ser lidas pelos participantes, nem moderador acessa',async()=>{
       await as(a);await db.query("insert into direct_messages(sender_id,recipient_id,content) values($1,$2,'Olá Bruno')",[a,b]);
