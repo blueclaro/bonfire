@@ -31,6 +31,7 @@ test('rede social: isolamento, preservação e interações',async t=>{
     await db.exec(read('supabase/migrations/20260925_school_label_letters_numbers.sql'));
     await db.exec(read('supabase/migrations/20260925_social_connections_threads.sql'));
     await db.exec(read('supabase/migrations/20260925_ignite_mentions.sql'));
+    await db.exec(read('supabase/migrations/20260925_temporary_posts_visible_to_permanent_users.sql'));
     await db.exec(read('supabase/migrations/20260925_user_chat_groups.sql'));
     await db.exec(read('supabase/migrations/20260925_staff_remove_sparks.sql'));
     for(const [user,name] of [[a,'Alice'],[b,'Bruno'],[staff,'Equipe']]) await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[user,name+'@test.invalid',JSON.stringify({full_name:name})]);
@@ -61,6 +62,18 @@ test('rede social: isolamento, preservação e interações',async t=>{
       assert.equal((await db.query('select * from posts where id=$1',[privatePost])).rows.length,0);
       await denied(db.query("insert into post_reactions(post_id,user_id,kind) values($1,$2,'ignite')",[privatePost,b]));
       await as(staff);await denied(db.query("insert into post_reactions(post_id,user_id,kind) values($1,$2,'ignite')",[privatePost,staff]));
+    });
+    await t.test('perfil permanente vê e interage com faísca temporária',async()=>{
+      await as(b);
+      const visible=(await db.query('select author_id from posts where id=$1',[post])).rows;
+      assert.equal(visible.length,1);assert.equal(visible[0].author_id,guest);
+      const data=(await db.query("select social_feed(0,'ppo') as data")).rows[0].data;
+      const spark=data.find(item=>item.id===post);
+      assert.ok(spark);assert.equal(spark.author.temporary_tag,'eba');
+      for(const kind of ['like','ignite'])await db.query('insert into post_reactions(post_id,user_id,kind) values($1,$2,$3)',[post,b,kind]);
+      await db.query("insert into comments(post_id,author_id,content) values($1,$2,'Interação de perfil permanente')",[post,b]);
+      const updated=(await db.query("select social_feed(0,'ppo') as data")).rows[0].data.find(item=>item.id===post);
+      assert.equal(updated.likes,2);assert.equal(updated.ignites,2);assert.equal(updated.comments,2);
     });
     await t.test('threads validam a faísca e notificações mostram o comentário',async()=>{
       const root=id(31),reply=id(32);
