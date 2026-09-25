@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 const icons = { like: '/like-still.png', comment: '/comments.png', ignite: '/ignite-still.png' };
+const playbackMs = { like: 2400, comment: 0, ignite: 6500 };
 
 /** One cycle (16 frames × 130 ms) plus decode/paint margin, only after a requested reaction. */
 export default function ReactionIcon({ kind, playKey = 0 }: { kind: keyof typeof icons; playKey?: number }) {
@@ -12,7 +13,7 @@ export default function ReactionIcon({ kind, playKey = 0 }: { kind: keyof typeof
     return () => clearTimeout(timer.current);
   }, [kind, playKey]);
   return <img key={playing ? playKey : 'still'} src={playing ? `/${kind}.gif?play=${playKey}` : icons[kind]} alt="" aria-hidden="true" width={32} height={32}
-    onLoad={() => { if (playing) { clearTimeout(timer.current); timer.current = setTimeout(() => setPlaying(false), 2400); } }}
+    onLoad={() => { if (playing) { clearTimeout(timer.current); timer.current = setTimeout(() => setPlaying(false), playbackMs[kind]); } }}
     onError={() => { clearTimeout(timer.current); setPlaying(false); }}
     className="inline-block h-8 w-8 shrink-0 object-contain align-middle [image-rendering:pixelated]" />;
 }

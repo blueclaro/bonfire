@@ -48,3 +48,11 @@ test('animação respeita movimento reduzido e tópicos oferecem acesso ao formu
   assert.ok(topic.includes('id="novo-comentario"'));
   assert.ok(topic.includes('onSubmit={handleComment}'));
 });
+
+test('página inicial prioriza o feed e mantém menu móvel acessível no rodapé',()=>{
+  const home=readFileSync(resolve(__dirname,'../src/app/page.tsx'),'utf8');
+  assert.ok(home.includes('mobileDocked'));
+  assert.ok(home.includes('order-1 min-w-0'));
+  const sidebar=readFileSync(resolve(__dirname,'../src/components/Sidebar.tsx'),'utf8');
+  assert.ok(sidebar.includes('fixed inset-x-0 bottom-0'));
+});

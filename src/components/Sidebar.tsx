@@ -16,9 +16,9 @@ const items: { label: string; href: string; key: Active }[] = [
   { label: "Perfil", href: "/perfil", key: "perfil" },
 ];
 
-export default function Sidebar({ active, showRooms: _showRooms = false }: { active: Active; showRooms?: boolean }) {
+export default function Sidebar({ active, showRooms: _showRooms = false, mobileDocked = false }: { active: Active; showRooms?: boolean; mobileDocked?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  return <aside className="min-w-0 self-start border-b border-white/10 p-4 xl:min-h-screen xl:border-b-0 xl:border-r xl:p-6" onKeyDown={event => { if (event.key === "Escape") setMenuOpen(false); }}>
+  return <aside className={`min-w-0 self-start border-white/10 bg-[#11100f] p-4 xl:min-h-screen xl:border-b-0 xl:border-r xl:p-6 ${mobileDocked ? "fixed inset-x-0 bottom-0 z-50 order-2 border-t shadow-[0_-12px_35px_rgba(0,0,0,.45)] xl:static xl:order-1 xl:border-t-0" : "border-b"}`} onKeyDown={event => { if (event.key === "Escape") setMenuOpen(false); }}>
     <div className="flex items-center justify-between gap-3 xl:mb-10">
     <Link className="flex min-w-0 items-center gap-3" href="/">
       <BonfireLogo />
