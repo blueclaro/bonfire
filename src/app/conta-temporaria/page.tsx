@@ -23,11 +23,17 @@ export default function TemporaryAccountPage() {
       setLoading(true); setError("");
       try {
         if (!isSupabaseConfigured) throw new Error();
-        const [status, auth] = await Promise.all([supabase.rpc("temporary_access_status"), supabase.auth.getUser()]);
+        const status = await supabase.rpc("temporary_access_status");
         if (status.error) throw status.error;
-        if (auth.error && auth.error.name !== "AuthSessionMissingError") throw auth.error;
         if (!live) return;
         setAccess(status.data);
+        const auth = await supabase.auth.getUser();
+        if (!live) return;
+        if (auth.error && auth.error.name !== "AuthSessionMissingError") {
+          await supabase.auth.signOut({ scope: "local" });
+          if (live) setExisting(null);
+          return;
+        }
         if (auth.data.user) {
           const { data, error: profileError } = await supabase.from("profiles").select("display_name,temporary_expires_at").eq("id", auth.data.user.id).single();
           if (profileError) throw profileError;
@@ -48,8 +54,8 @@ export default function TemporaryAccountPage() {
     sending.current = true; setBusy(true); setError("");
     try {
       const auth = await supabase.auth.getUser();
-      if (auth.error && auth.error.name !== "AuthSessionMissingError") throw new Error("Não foi possível verificar sua sessão. Tente novamente antes de criar uma conta.");
-      if (auth.data.user) { setRetry(n => n + 1); return; }
+      if (auth.error && auth.error.name !== "AuthSessionMissingError") await supabase.auth.signOut({ scope: "local" });
+      if (!auth.error && auth.data.user) { setRetry(n => n + 1); return; }
       const { data, error: signupError } = await supabase.auth.signInAnonymously({
         options: { data: { temporary_name: name.trim(), temporary_tag: tag } },
       });

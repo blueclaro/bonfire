@@ -20,6 +20,15 @@ test("formulário usa a nova identidade de exemplo e explica a combinação úni
   assert.ok(!page.includes('placeholder="CharlieLegal"'));
   assert.ok(!page.includes('placeholder="bubu"'));
 });
+test("sessão local inválida não bloqueia a consulta da entrada temporária",()=>{
+  const page=readFileSync(resolve(__dirname,"../src/app/conta-temporaria/page.tsx"),"utf8");
+  const status=page.indexOf('const status = await supabase.rpc("temporary_access_status")');
+  const access=page.indexOf('setAccess(status.data)');
+  const auth=page.indexOf('const auth = await supabase.auth.getUser()',status);
+  assert.ok(status>=0 && access>status && auth>access);
+  assert.ok(page.includes('await supabase.auth.signOut({ scope: "local" })'));
+  assert.ok(!page.includes('Promise.all([supabase.rpc("temporary_access_status")'));
+});
 test("QR Code é gerado localmente para a página pública, sem credenciais",async()=>{
   const qr=require("qrcode");
   const image=await qr.toDataURL("https://bonfire-iota.vercel.app/conta-temporaria",{errorCorrectionLevel:"M"});
