@@ -24,6 +24,7 @@ export default function SocialFeed() {
   const [filter, setFilter] = useState('');
   const [more, setMore] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [animation, setAnimation] = useState<{eventId:string;kind:string;key:number} | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const request = useRef(0);
   const sending = useRef(false);
@@ -90,9 +91,11 @@ export default function SocialFeed() {
     if (acting.current) return;
     acting.current = true; setBusy(entry.id); setNotice('');
     const selected = kind === 'like' ? entry.liked : entry.ignited;
+    setAnimation(null);
     try {
       const result = selected ? await supabase.from('post_reactions').delete().eq('post_id',entry.id).eq('user_id',userId).eq('kind',kind) : await supabase.from('post_reactions').insert({post_id:entry.id,user_id:userId,kind});
       if (result.error && result.error.code !== '23505') throw result.error;
+      if (!selected && !result.error) setAnimation({eventId:entry.event_id,kind,key:Date.now()});
       await load();
     } catch { setNotice('Não foi possível atualizar a interação. Tente novamente.'); }
     finally { acting.current=false; setBusy(''); }
@@ -128,7 +131,7 @@ export default function SocialFeed() {
       <p className="mt-3 whitespace-pre-wrap [overflow-wrap:anywhere]">{entry.content}</p>
       {entry.image_path && <SignedPostImage path={entry.image_path}/>}
       <div className="mt-3 flex flex-wrap gap-2">{extractHashtags(entry.content).map(tag=><button key={tag} onClick={()=>chooseTag(tag)} className="text-sm text-[#ffd19a]">#{tag}</button>)}</div>
-      <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3 text-sm"><button aria-pressed={entry.liked} disabled={!!busy} onClick={()=>void react(entry,'like')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 ${entry.liked?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="like"/> {entry.likes} Curtidas</button><Link href={`/foruns/topico/${entry.id}#novo-comentario`} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-white/5 px-3"><ReactionIcon kind="comment"/> {entry.comments} Comentários</Link><button aria-pressed={entry.ignited} disabled={!!busy || !entry.can_ignite} title={!entry.can_ignite?'Conteúdo restrito não pode ser repostado':undefined} onClick={()=>void react(entry,'ignite')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 disabled:opacity-50 ${entry.ignited?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="ignite"/> {entry.ignites} Ignites</button></div>
+      <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3 text-sm"><button aria-pressed={entry.liked} disabled={!!busy} onClick={()=>void react(entry,'like')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 ${entry.liked?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="like" playKey={animation?.eventId===entry.event_id && animation.kind==="like" ? animation.key : 0}/> {entry.likes} Curtidas</button><Link href={`/foruns/topico/${entry.id}#novo-comentario`} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-white/5 px-3"><ReactionIcon kind="comment"/> {entry.comments} Comentários</Link><button aria-pressed={entry.ignited} disabled={!!busy || !entry.can_ignite} title={!entry.can_ignite?'Conteúdo restrito não pode ser repostado':undefined} onClick={()=>void react(entry,'ignite')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 disabled:opacity-50 ${entry.ignited?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="ignite" playKey={animation?.eventId===entry.event_id && animation.kind==="ignite" ? animation.key : 0}/> {entry.ignites} Ignites</button></div>
       {entry.author_id===userId?<button disabled={!!busy} onClick={()=>void remove(entry)} className="mt-3 text-xs text-[#b9aaa0]">Excluir publicação</button>:<ReportButton targetType="post" targetId={entry.id}/>}
     </article>)}</div>
     {loading && <p role="status" className="p-6 text-center text-[#b9aaa0]">Carregando feed…</p>}

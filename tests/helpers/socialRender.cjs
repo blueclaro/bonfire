@@ -5,7 +5,7 @@ const React=require('react');
 const {renderToStaticMarkup}=require('react-dom/server');
 const ts=require('typescript');
 function renderFeed(entries=[],user='demo'){
-  const states=[entries,user,false,'','','',null,'',false,'','','',false,0];let index=0;
+  const states=[entries,user,false,'','','',null,'',false,'','','',false,0,null];let index=0;
   function load(path){const exports={};runInNewContext(ts.transpileModule(readFileSync(resolve(__dirname,'../../src',path),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020}}).outputText,{exports,Intl,require(name){
     if(name==='react')return {...React,useState:initial=>[index<states.length?states[index++]:initial,()=>{}],useEffect:()=>{},useRef:initial=>({current:initial}),useCallback:fn=>fn};
     if(name==='next/link')return {default:({children,...props})=>React.createElement('a',props,children)};
