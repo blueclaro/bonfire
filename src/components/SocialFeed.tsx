@@ -8,6 +8,7 @@ import ReportButton from '@/components/ReportButton';
 import Avatar from '@/components/SocialAvatar';
 import ReactionIcon from '@/components/ReactionIcon';
 import SparkThread from '@/components/SparkThread';
+import StaffRemoveSpark from '@/components/StaffRemoveSpark';
 
 type Entry = { event_id: string; id: string; title: string; content: string; image_path: string | null; author_id: string; author: SocialAuthor | null; igniter: SocialAuthor | null; created_at: string; event_at: string; is_locked: boolean; can_ignite: boolean; likes: number; comments: number; ignites: number; liked: boolean; ignited: boolean };
 export default function SocialFeed() {
@@ -27,6 +28,7 @@ export default function SocialFeed() {
   const [offset, setOffset] = useState(0);
   const [animation, setAnimation] = useState<{eventId:string;kind:string;key:number} | null>(null);
   const [expanded,setExpanded]=useState<string[]>([]);
+  const [viewerRole,setViewerRole]=useState('');
   const fileInput = useRef<HTMLInputElement>(null);
   const request = useRef(0);
   const sending = useRef(false);
@@ -45,8 +47,8 @@ export default function SocialFeed() {
       if (version !== request.current) return;
       if (!auth.data.user) { setUserId(''); setEntries([]); if (auth.error && auth.error.name !== 'AuthSessionMissingError') throw auth.error; return; }
       account.current = auth.data.user.id; setUserId(auth.data.user.id);
-      const result = await supabase.rpc('social_feed', {page_offset:start, hashtag});
-      if (result.error) throw result.error;
+      const [result,profile]=await Promise.all([supabase.rpc('social_feed', {page_offset:start, hashtag}),supabase.from('profiles').select('role').eq('id',auth.data.user.id).single()]);
+      if (result.error) throw result.error; setViewerRole(profile.data?.role||'');
       if (version !== request.current) return;
       const next = result.data as Entry[];
       setEntries(previous => start ? [...previous, ...next.filter(item => !previous.some(old => old.event_id === item.event_id))] : next);
@@ -60,7 +62,7 @@ export default function SocialFeed() {
     const {data} = supabase.auth.onAuthStateChange((event,session) => {
       if (event === 'INITIAL_SESSION' || event === 'TOKEN_REFRESHED') return;
       if (event === 'SIGNED_IN' && session?.user.id === account.current) return;
-      request.current++; setEntries([]); setUserId(''); setText(''); setFile(null);
+      request.current++; setEntries([]); setUserId(''); setViewerRole(''); setText(''); setFile(null);
       clearTimeout(timer); timer = setTimeout(() => void load(), 0);
     });
     return () => { request.current++; clearTimeout(timer); data.subscription.unsubscribe(); };
@@ -136,6 +138,7 @@ export default function SocialFeed() {
       <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3 text-sm"><button aria-pressed={entry.liked} disabled={!!busy} onClick={()=>void react(entry,'like')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 ${entry.liked?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="like" playKey={animation?.eventId===entry.event_id && animation.kind==="like" ? animation.key : 0}/> {entry.likes} Curtidas</button><button type="button" onClick={()=>setExpanded(current=>current.includes(entry.event_id)?current.filter(id=>id!==entry.event_id):[...current,entry.event_id])} className="inline-flex min-h-11 items-center gap-1 rounded-full bg-white/5 px-3"><ReactionIcon kind="comment"/> {entry.comments} Comentários</button><button aria-pressed={entry.ignited} disabled={!!busy || !entry.can_ignite} title={!entry.can_ignite?'Conteúdo restrito não pode receber Ignite':undefined} onClick={()=>void react(entry,'ignite')} className={`inline-flex min-h-11 items-center gap-1 rounded-full px-3 disabled:opacity-50 ${entry.ignited?'bg-[#ff8a3d]/15 text-[#ffd19a]':'bg-white/5'}`}><ReactionIcon kind="ignite" playKey={animation?.eventId===entry.event_id && animation.kind==="ignite" ? animation.key : 0}/> {entry.ignites} Ignites</button></div>
       {expanded.includes(entry.event_id)&&<SparkThread postId={entry.id} userId={userId} locked={entry.is_locked} onChanged={()=>void load()}/>}
       {entry.author_id===userId?<button disabled={!!busy} onClick={()=>void remove(entry)} className="mt-3 text-xs text-[#b9aaa0]">Excluir faísca</button>:<ReportButton targetType="post" targetId={entry.id}/>}
+      {entry.author_id!==userId&&['coordination','moderator'].includes(viewerRole)&&<StaffRemoveSpark postId={entry.id} onRemoved={()=>void load()}/>}
     </article>)}</div>
     {loading && <p role="status" className="p-6 text-center text-[#b9aaa0]">Carregando feed…</p>}
     {!loading && userId && !error && !entries.length && <p className="rounded-xl border border-dashed border-white/10 p-6 text-[#b9aaa0]">{hashtag?'Nenhuma faísca com essa hashtag.':'A fogueira está acesa. Lance a primeira faísca!'}</p>}

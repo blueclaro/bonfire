@@ -29,6 +29,7 @@ test('rede social: isolamento, preservação e interações',async t=>{
     await db.exec(migration);await db.exec(storage);
     await db.exec(read('supabase/migrations/20260925_social_connections_threads.sql'));
     await db.exec(read('supabase/migrations/20260925_user_chat_groups.sql'));
+    await db.exec(read('supabase/migrations/20260925_staff_remove_sparks.sql'));
     for(const [user,name] of [[a,'Alice'],[b,'Bruno'],[staff,'Equipe']]) await db.query('insert into auth.users(id,email,raw_user_meta_data) values($1,$2,$3)',[user,name+'@test.invalid',JSON.stringify({full_name:name})]);
     await db.query("update profiles set role='moderator' where id=$1",[staff]);
     await db.exec('update temporary_access_settings set registration_enabled=true');
@@ -88,6 +89,12 @@ test('rede social: isolamento, preservação e interações',async t=>{
       await as(staff);assert.equal((await db.query('select * from chat_rooms where id=$1',[room])).rows.length,0);
       await denied(db.query('select delete_chat_group($1)',[room]));
       await as(a);await db.query('select delete_chat_group($1)',[room]);assert.equal((await db.query('select * from chat_rooms where id=$1',[room])).rows.length,0);
+    });
+    await t.test('somente moderação e coordenação removem faíscas diretamente',async()=>{
+      const removable=id(12);await as(a);await db.query("insert into posts(id,category_id,author_id,title,content) values($1,$2,$3,'','Faísca para moderar')",[removable,feed,a]);
+      await as(b);await denied(db.query("select staff_remove_post($1,'Motivo suficientemente detalhado')",[removable]));
+      await as(staff);await db.query("select staff_remove_post($1,'Motivo suficientemente detalhado')",[removable]);assert.equal((await db.query("select * from content_moderation_events where target_id=$1",[removable])).rows.length,1);
+      await as(a);assert.equal((await db.query('select * from posts where id=$1',[removable])).rows.length,0);assert.match((await db.query("select message from notifications where target_id=$1",[removable])).rows[0].message,/removida pela moderação/);
     });
     await t.test('bloqueio impede envio nas duas direções sem apagar histórico',async()=>{
       await as(b);await db.query('insert into user_blocks values($1,$2)',[b,a]);

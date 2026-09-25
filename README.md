@@ -15,11 +15,12 @@ Execute no SQL Editor, nesta ordem, após as migrações de contas temporárias:
 2. `supabase/migrations/20260924_social_storage.sql`
 3. `supabase/migrations/20260925_social_connections_threads.sql`
 4. `supabase/migrations/20260925_user_chat_groups.sql`
+5. `supabase/migrations/20260925_staff_remove_sparks.sql`
 
 Em instalações novas, execute o `schema.sql` e depois estes dois arquivos.
 Eles são reaplicáveis. Não reaplique migrações antigas por cima das novas.
 Não é necessário desabilitar RLS nem tornar o bucket público.
-Só publique o código depois do sucesso dos quatro arquivos.
+Só publique o código depois do sucesso dos cinco arquivos.
 As duas migrações de 25/09 adicionam seguidores, threads, notificações com trecho
 e grupos criados pelos usuários. A migração de grupos arquiva as três salas fixas
 sem apagar suas mensagens; somente grupos novos podem ser excluídos pelo criador.
