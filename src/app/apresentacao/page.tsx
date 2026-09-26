@@ -16,7 +16,7 @@ export default function PresentationPage() {
     return () => { live = false; };
   }, []);
   return <main className="flex min-h-screen flex-col items-center justify-center gap-6 bg-[#11100f] p-6 text-center text-[#f6efe7]">
-    <h1 className="text-4xl font-black md:text-6xl">Experimente o Bonfire!</h1>
+    <h1 className="text-4xl font-black md:text-6xl">O twitter do IFC</h1>
     <p className="max-w-xl text-xl text-[#b9aaa0]">Aponte a câmera, escolha seu nome e uma tag e participe da conversa.</p>
     {image ? <img src={image} width={360} height={360} alt="QR Code para criar sua conta temporária no Bonfire" className="h-auto w-full max-w-sm rounded-xl" /> : <p role="status">{error ? "Use o endereço abaixo para entrar." : "Gerando QR Code…"}</p>}
     <Link href="/conta-temporaria" className="break-all text-lg text-[#ffd19a] underline">{url || "Criar conta temporária"}</Link>
