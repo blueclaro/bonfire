@@ -14,10 +14,12 @@ test('cadastro usa e-mail, nome com tag e avança para verificação',()=>{
   assert.ok(page.includes('router.push("/cadastro/verificacao")'));
 });
 
-test('verificação aceita seis caracteres e confirma o OTP real',()=>{
+test('verificação não corta OTPs de oito dígitos e confirma o OTP real',()=>{
   const page=read('src/app/cadastro/verificacao/page.tsx');
-  assert.ok(page.includes('maxLength={6}'));
-  assert.ok(page.includes('pattern="[A-Za-z0-9]{6}"'));
+  assert.ok(page.includes('maxLength={10}'));
+  assert.ok(page.includes('pattern="[A-Za-z0-9]{6,10}"'));
+  assert.ok(page.includes('code.length<6||code.length>10'));
+  assert.ok(page.includes('/^[A-Z0-9]{6,10}$/'));
   assert.ok(page.includes('supabase.auth.verifyOtp({email,token,type:"email"})'));
   assert.ok(page.includes('supabase.auth.resend({type:"signup",email})'));
   assert.ok(read('supabase/templates/confirmation.html').includes('{{ .Token }}'));
