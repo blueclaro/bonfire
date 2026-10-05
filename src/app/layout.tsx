@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import AccountApprovalGate from "@/components/AccountApprovalGate";
 
 export const metadata: Metadata = {
   title: "Bonfire",
@@ -8,5 +9,5 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="pt-BR"><body>{children}</body></html>;
+  return <html lang="pt-BR"><body><AccountApprovalGate>{children}</AccountApprovalGate></body></html>;
 }

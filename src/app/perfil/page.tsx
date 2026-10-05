@@ -22,6 +22,9 @@ type Profile = {
 
 type RecentPost = { id: string; title: string; content: string; created_at: string };
 
+// Evita solicitar campos privados das decisões administrativas.
+const profileFields = "id,username,display_name,role,class_name,avatar_url,bio,school_label,temporary_expires_at";
+
 const roleLabels: Record<Profile["role"], string> = {
   student: "Aluno",
   teacher: "Professor",
@@ -37,6 +40,7 @@ export default function PerfilPage() {
   const [commentCount, setCommentCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+  const [retry, setRetry] = useState(0);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
@@ -47,6 +51,8 @@ export default function PerfilPage() {
 
   useEffect(() => {
     async function loadProfile() {
+      setLoading(true);
+      setErrorMessage("");
       const { data: userData, error: userError } = await supabase.auth.getUser();
 
       if (userError || !userData.user) {
@@ -58,7 +64,7 @@ export default function PerfilPage() {
       const user = userData.user;
       const [profileResult, postsResult, postCountResult, commentCountResult] =
         await Promise.all([
-          supabase.from("profiles").select("*").eq("id", user.id).single(),
+          supabase.from("profiles").select(profileFields).eq("id", user.id).single(),
           supabase.from("posts").select("id, title, content, created_at").eq("author_id", user.id).order("created_at", { ascending: false }).limit(5),
           supabase.from("posts").select("id", { count: "exact", head: true }).eq("author_id", user.id),
           supabase.from("comments").select("id", { count: "exact", head: true }).eq("author_id", user.id),
@@ -71,7 +77,7 @@ export default function PerfilPage() {
       }
 
       if (profileResult.error) {
-        setErrorMessage("Não foi possível carregar seu perfil. Confirme se o schema.sql foi executado no Supabase.");
+        setErrorMessage("Não foi possível carregar seu perfil. Tente novamente. Se o problema continuar, avise a administração.");
         setLoading(false);
         return;
       }
@@ -88,8 +94,11 @@ export default function PerfilPage() {
       setLoading(false);
     }
 
-    loadProfile();
-  }, [router]);
+    void loadProfile().catch(() => {
+      setErrorMessage("Não foi possível carregar seu perfil. Verifique sua conexão e tente novamente.");
+      setLoading(false);
+    });
+  }, [router, retry]);
 
   async function handleLogout() {
     if (profile?.temporary_expires_at && !window.confirm("Sair da conta temporária? Não será possível recuperá-la pelo nome ou tag.")) return;
@@ -128,7 +137,7 @@ export default function PerfilPage() {
       .from("profiles")
       .update(changes)
       .eq("id", profile.id)
-      .select("*")
+      .select(profileFields)
       .single();
 
     setSaving(false);
@@ -162,7 +171,7 @@ export default function PerfilPage() {
   }
 
   if (!profile) {
-    return <main className="flex min-h-screen items-center justify-center bg-[#11100f] px-6 text-[#f6efe7]"><div className="max-w-lg rounded-xl border border-red-400/30 bg-red-400/10 p-5 text-red-200">{errorMessage || "Perfil não encontrado."}</div></main>;
+    return <main className="flex min-h-screen items-center justify-center bg-[#11100f] px-6 text-[#f6efe7]"><div className="max-w-lg rounded-xl border border-red-400/30 bg-red-400/10 p-5 text-red-200"><p role="alert">{errorMessage || "Perfil não encontrado."}</p><button onClick={() => setRetry(current => current + 1)} className="mt-4 rounded-full border border-white/20 px-4 py-2 text-[#f6efe7]">Tentar novamente</button></div></main>;
   }
 
   const displayName = profile.display_name || profile.username || "Usuário";

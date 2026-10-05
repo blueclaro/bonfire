@@ -22,5 +22,5 @@ export default function ModerationLink({ active }: { active: boolean }) {
     return () => { live = false; version++; subscription.unsubscribe(); };
   }, []);
   if (!allowed) return null;
-  return <Link href="/denuncias" className={`rounded-lg px-4 py-3 text-center xl:text-left ${active ? "bg-white/10 text-white" : "hover:bg-white/5 hover:text-white"}`}>Denúncias</Link>;
+  return <Link href="/moderacao" className={`rounded-lg px-4 py-3 text-center xl:text-left ${active ? "bg-white/10 text-white" : "hover:bg-white/5 hover:text-white"}`}>Moderação</Link>;
 }

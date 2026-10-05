@@ -11,6 +11,7 @@
     "start": "next start",
     "test": "node --test tests/*.test.cjs",
     "test:moderation": "node --test tests/moderation.integration.cjs",
+    "test:approval": "node --test tests/accountApproval.integration.cjs",
     "test:reports": "node --test tests/reports.integration.cjs",
     "test:notifications": "node --test tests/notifications.integration.cjs",
     "test:temporary": "node --test tests/temporaryAccount.test.cjs tests/temporaryAccounts.integration.cjs",

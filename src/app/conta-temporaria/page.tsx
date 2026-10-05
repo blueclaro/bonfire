@@ -94,7 +94,7 @@ export default function TemporaryAccountPage() {
     <Link href="/" className="text-sm text-[#ffd19a]">← Voltar ao Bonfire</Link>
     <p className="mt-8 text-sm font-bold uppercase tracking-widest text-[#ffd19a]">Apresentação do Bonfire</p>
     <h1 className="mt-3 text-4xl font-black">Crie sua conta temporária no Bonfire!</h1>
-    <p className="mt-4 text-[#b9aaa0]">Sem e-mail e sem senha. Publique faíscas, comente e converse nos grupos.</p>
+    <p className="mt-4 text-[#b9aaa0]">Sem e-mail e sem senha. Após a aprovação da administração, publique faíscas, comente e converse nos grupos.</p>
     {error && <p role="alert" className="mt-5 text-red-200">{error} <button type="button" disabled={loading} onClick={refresh} className="underline disabled:opacity-50">{loading ? "Atualizando…" : "Atualizar"}</button></p>}
     {loading ? <p role="status" className="mt-6">Verificando entrada…</p> : existing ? <div className="mt-6 space-y-4 rounded-xl border border-white/15 p-6">
       <h2 className="text-xl font-bold">{existing.name}</h2>
