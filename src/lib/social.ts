@@ -1,5 +1,15 @@
 export const FEED_CATEGORY = '20000000-0000-4000-8000-000000000001';
 export type SocialAuthor = { id?: string; username: string | null; display_name: string | null; temporary_tag?: string | null; avatar_url?: string | null };
+export function profileHandleError(value: string) {
+  return /^[A-Za-z0-9_!*/.+-]{3,24}#[A-Za-z0-9]{1,4}$/.test(value)
+    ? '' : 'Use nome#tag, sem espaços. A tag é obrigatória e deve ter de 1 a 4 letras ou números.';
+}
+export function socialDisplayName(author: SocialAuthor | null) {
+  if (!author) return 'Membro';
+  const name = author.display_name?.trim();
+  if (name) return author.temporary_tag && name.endsWith('#' + author.temporary_tag) ? name.slice(0, -(author.temporary_tag.length + 1)) : name;
+  return author.username?.split('#')[0] || 'Membro';
+}
 export function socialHandle(author: SocialAuthor | null) {
   if (!author) return '@membro';
   return '@' + (author.temporary_tag ? author.display_name || author.username || 'membro' : author.username || author.display_name || 'membro');

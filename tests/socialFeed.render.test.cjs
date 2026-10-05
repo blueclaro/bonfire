@@ -15,3 +15,10 @@ test('feed autenticado oferece compositor, perfil, comentários e reações',()=
 test('feed sem sessão pede login sem exibir compositor',()=>{
   const html=renderFeed([], '');assert.ok(html.includes('Entre na sua conta'));assert.ok(!html.includes('id="publication"'));
 });
+test('feed exibe nome e @ com tag lado a lado, com identificador mais discreto',()=>{
+  const permanent={...entries[0],author:{id:'charlie',display_name:'Charlie',username:'charlie#dev'}};
+  const html=renderFeed([permanent]);
+  assert.match(html,/font-bold[^>]*>Charlie<\/span><span class="[^"]*opacity-60">@charlie#dev<\/span>/);
+  const temporary=renderFeed(entries);
+  assert.match(temporary,/font-bold[^>]*>Charlie<\/span><span class="[^"]*opacity-60">@Charlie#eba<\/span>/);
+});

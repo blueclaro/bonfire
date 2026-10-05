@@ -7,6 +7,7 @@ import ProfileAvatar from "@/components/ProfileAvatar";
 import ProfilePhotoEditor from "@/components/ProfilePhotoEditor";
 import Link from "next/link";
 import { clearLocalAuthSession, supabase } from "@/lib/supabase";
+import { profileHandleError } from "@/lib/social";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -120,8 +121,9 @@ export default function PerfilPage() {
       return;
     }
 
-    if (!/^[a-z0-9_!*/.+-]{3,24}(#[a-z0-9]{1,4})?$/i.test(cleanUsername)) {
-      setSaveMessage("Use nome#tag, sem espaços. A tag pode ter até 4 letras ou números.");
+    const handleError = profileHandleError(cleanUsername);
+    if (handleError) {
+      setSaveMessage(handleError);
       return;
     }
 
@@ -219,11 +221,12 @@ export default function PerfilPage() {
                 </label>
 
                 <label className="text-sm text-[#b9aaa0]">
-                  Nome de usuário
+                  Nome de usuário e tag
                   <div className="mt-2 flex rounded-lg border border-white/10 bg-black/20 focus-within:border-[#ff8a3d]">
                     <span className="px-4 py-3 text-[#7d7068]">@</span>
-                    <input value={usernameInput} onChange={(event) => setUsernameInput(event.target.value)} maxLength={29} className="min-w-0 flex-1 bg-transparent py-3 pr-4 text-[#f6efe7] outline-none" />
+                    <input required aria-describedby="profile-tag-help" value={usernameInput} onChange={(event) => setUsernameInput(event.target.value)} maxLength={29} placeholder="charlie#dev" className="min-w-0 flex-1 bg-transparent py-3 pr-4 text-[#f6efe7] outline-none" />
                   </div>
+                  <span id="profile-tag-help" className="mt-1 block text-xs text-[#7d7068]">A tag é obrigatória: use nome#tag, com 1 a 4 letras ou números após #.</span>
                 </label>
 
                 <label className="text-sm text-[#b9aaa0] md:col-span-2">

@@ -17,3 +17,12 @@ test('hashtags únicas e identidade sem identificador interno temporário',()=>{
   assert.equal(api.socialHandle({username:'visitante000',display_name:'Charlie#eba',temporary_tag:'eba'}),'@Charlie#eba');
   assert.equal(api.socialHandle({username:'charlie',display_name:'Charlie'}),'@charlie');
 });
+test('edição do perfil exige nome com tag de um a quatro caracteres',()=>{
+  for(const handle of ['charlie','charlie#','charlie#abcde','charlie#d_v','charlie#d ev']) assert.ok(api.profileHandleError(handle),handle);
+  for(const handle of ['charlie#dev','charlie#d','charlie#dev1']) assert.equal(api.profileHandleError(handle),'');
+});
+test('nome de exibição fica separado da identidade com tag no feed',()=>{
+  assert.equal(api.socialDisplayName({username:'charlie#dev',display_name:'Charlie'}),'Charlie');
+  assert.equal(api.socialDisplayName({username:'visitante000',display_name:'Charlie#dev',temporary_tag:'dev'}),'Charlie');
+  assert.equal(api.socialDisplayName({username:'charlie#dev',display_name:null}),'charlie');
+});

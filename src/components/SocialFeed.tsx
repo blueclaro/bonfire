@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { extractHashtags, FEED_CATEGORY, preparePostImage, publicationError, SocialAuthor, socialHandle } from '@/lib/social';
+import { extractHashtags, FEED_CATEGORY, preparePostImage, publicationError, SocialAuthor, socialHandle, socialDisplayName } from '@/lib/social';
 import SignedPostImage from '@/components/SignedPostImage';
 import ReportButton from '@/components/ReportButton';
 import Avatar from '@/components/SocialAvatar';
@@ -138,7 +138,7 @@ export default function SocialFeed() {
     {error && <p role="alert" className="mb-4 text-red-200">{error}</p>}
     <div className="space-y-4">{entries.map(entry=><article key={entry.event_id} onClick={event=>{if(!(event.target as HTMLElement).closest('button,a,input,textarea,form'))setExpanded(current=>current.includes(entry.event_id)?current.filter(id=>id!==entry.event_id):[...current,entry.event_id]);}} className="cursor-pointer rounded-2xl border border-white/10 bg-white/[.035] p-4 sm:p-5">
       {entry.igniter && <p className="mb-3 text-xs text-[#ffd19a]"><ReactionIcon kind="ignite"/> <Link href={`/pessoas/${entry.igniter.id}`}>{socialHandle(entry.igniter)}</Link> deu um Ignite</p>}
-      <div className="flex items-center gap-3"><Link href={`/pessoas/${entry.author_id}`} className="flex min-w-0 items-center gap-3"><Avatar author={entry.author}/><span className="break-all font-bold">{socialHandle(entry.author)}</span></Link><Link href={`/foruns/topico/${entry.id}`} className="ml-auto shrink-0 text-xs text-[#b9aaa0]" aria-label="Abrir faísca">{new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',timeZone:'America/Sao_Paulo'}).format(new Date(entry.created_at))}</Link></div>
+      <div className="flex items-center gap-3"><Link href={`/pessoas/${entry.author_id}`} className="flex min-w-0 items-center gap-3"><Avatar author={entry.author}/><span className="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1"><span className="break-words font-bold [overflow-wrap:anywhere]">{socialDisplayName(entry.author)}</span><span className="break-all text-sm opacity-60">{socialHandle(entry.author)}</span></span></Link><Link href={`/foruns/topico/${entry.id}`} className="ml-auto shrink-0 text-xs text-[#b9aaa0]" aria-label="Abrir faísca">{new Intl.DateTimeFormat('pt-BR',{day:'2-digit',month:'short',timeZone:'America/Sao_Paulo'}).format(new Date(entry.created_at))}</Link></div>
       {entry.title && <p className="mt-4 font-bold">{entry.title}</p>}
       <p className="mt-3 whitespace-pre-wrap [overflow-wrap:anywhere]">{entry.content}</p>
       {entry.image_path && <SignedPostImage path={entry.image_path}/>}
