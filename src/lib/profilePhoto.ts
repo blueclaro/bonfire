@@ -7,7 +7,7 @@ export function avatarStoragePath(value: string | null | undefined) {
 
 export function profilePhotoError(file: Pick<File, "type" | "size">) {
   if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) return "Escolha uma foto em JPG, PNG ou WebP.";
-  if (file.size > 5 * 1024 * 1024) return "A foto deve ter até 5 MB.";
+  if (file.size > 20 * 1024 * 1024) return "A foto deve ter até 20 MB.";
   if (!file.size) return "A foto está vazia. Escolha outro arquivo.";
   return "";
 }

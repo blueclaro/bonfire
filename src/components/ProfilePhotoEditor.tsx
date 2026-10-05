@@ -64,7 +64,7 @@ export default function ProfilePhotoEditor({ userId, avatar, name, onSaved }: {
       <ProfileAvatar value={preview || avatar} name={name} className="h-20 w-20 text-3xl" />
       <div className="min-w-0 flex-1">
         <h2 className="text-xl font-bold">Foto de perfil</h2>
-        <p id="profile-photo-help" className="mt-2 text-sm text-[#b9aaa0]">JPG, PNG ou WebP de até 5 MB. A foto será recortada no centro.</p>
+        <p id="profile-photo-help" className="mt-2 text-sm text-[#b9aaa0]">JPG, PNG ou WebP de até 20 MB. A foto será recortada no centro.</p>
         <label className={`mt-4 inline-flex cursor-pointer rounded-full border border-white/20 px-4 py-2 font-bold ${busy ? "pointer-events-none opacity-50" : "hover:bg-white/5"}`}>
           {avatar ? "Trocar foto" : "Adicionar foto"}
           <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" aria-label="Escolher foto de perfil" aria-describedby="profile-photo-help" disabled={busy} onChange={choose} className="sr-only" />

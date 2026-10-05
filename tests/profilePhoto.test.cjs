@@ -17,10 +17,10 @@ function helpers({width = 1600, height = 900, decodeError = false} = {}) {
   return {...exports, calls, canvas};
 }
 
-test('foto rejeita arquivos vazios, SVG, tipos indevidos e mais de 5 MB', () => {
+test('foto rejeita arquivos vazios, SVG, tipos indevidos e mais de 20 MB', () => {
   const photo = helpers();
-  for (const file of [{type: 'image/svg+xml', size: 100}, {type: 'image/jpeg', size: 0}, {type: 'image/png', size: 5242881}]) assert.ok(photo.profilePhotoError(file));
-  assert.equal(photo.profilePhotoError({type: 'image/webp', size: 5242880}), '');
+  for (const file of [{type: 'image/svg+xml', size: 100}, {type: 'image/jpeg', size: 0}, {type: 'image/png', size: 20971521}]) assert.ok(photo.profilePhotoError(file));
+  assert.equal(photo.profilePhotoError({type: 'image/webp', size: 20971520}), '');
 });
 test('foto é recortada no centro, reduzida a 512 pixels e convertida em JPEG', async () => {
   const photo = helpers();
