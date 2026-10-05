@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ProfileAvatar from "@/components/ProfileAvatar";
 import { useEffect, useRef, useState } from "react";
 import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 
@@ -16,7 +17,6 @@ export default function HomeProfile() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [retry, setRetry] = useState(0);
-  const [failedAvatar, setFailedAvatar] = useState<string | null>(null);
   const request = useRef(0);
 
   useEffect(() => {
@@ -26,7 +26,6 @@ export default function HomeProfile() {
       const current = () => active && version === request.current;
       setProfile(null);
       setStatus("loading");
-      setFailedAvatar(null);
       try {
         if (!isSupabaseConfigured) throw new Error("Configuração indisponível");
         const auth = await supabase.auth.getUser();
@@ -50,6 +49,7 @@ export default function HomeProfile() {
     void refresh();
     const onFocus = () => { void refresh(); };
     window.addEventListener("focus", onFocus);
+    window.addEventListener("bonfire:avatar-updated", onFocus);
     let timer: ReturnType<typeof setTimeout> | undefined;
     const { data: listener } = supabase.auth.onAuthStateChange(() => {
       request.current++;
@@ -64,6 +64,7 @@ export default function HomeProfile() {
       clearTimeout(timer);
       listener.subscription.unsubscribe();
       window.removeEventListener("focus", onFocus);
+      window.removeEventListener("bonfire:avatar-updated", onFocus);
     };
   }, [retry]);
 
@@ -73,14 +74,10 @@ export default function HomeProfile() {
   if (status === "missing" || !profile) return <Link href="/perfil" className="text-sm text-[#ffd19a] underline">Perfil indisponível — verificar</Link>;
 
   const name = profile.display_name?.trim() || profile.username?.trim() || "Usuário";
-  const initial = Array.from(name)[0].toLocaleUpperCase("pt-BR");
-  const avatar = profile.avatar_url?.trim();
-  const showAvatar = avatar && /^https?:\/\//i.test(avatar) && failedAvatar !== avatar;
   return <Link href="/perfil" aria-label={"Abrir perfil de " + name} className="flex min-w-0 max-w-full items-center gap-3 rounded-lg text-[#b9aaa0] hover:text-[#ffd19a] md:max-w-xs md:shrink-0">
     <div className="min-w-0"><span className="block truncate font-semibold" title={name}>{name}</span>
       {profile.class_name?.trim() && <span className="block truncate text-sm" title={profile.class_name}>{profile.class_name}</span>}
     </div>
-    {showAvatar ? <img src={avatar} alt="" referrerPolicy="no-referrer" onError={() => setFailedAvatar(avatar)} className="h-10 w-10 shrink-0 rounded-full object-cover" /> :
-      <span aria-hidden="true" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#ff8a3d] font-bold text-[#21140e]">{initial}</span>}
+    <ProfileAvatar value={profile.avatar_url} name={name} className="h-10 w-10" decorative />
   </Link>;
 }

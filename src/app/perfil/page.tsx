@@ -3,6 +3,8 @@
 import Sidebar from "@/components/Sidebar";
 import StatCard from "@/components/StatCard";
 import SchoolLabelEditor from "@/components/SchoolLabelEditor";
+import ProfileAvatar from "@/components/ProfileAvatar";
+import ProfilePhotoEditor from "@/components/ProfilePhotoEditor";
 import Link from "next/link";
 import { clearLocalAuthSession, supabase } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
@@ -175,7 +177,6 @@ export default function PerfilPage() {
   }
 
   const displayName = profile.display_name || profile.username || "Usuário";
-  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <main className="min-h-screen bg-[#11100f] text-[#f6efe7]">
@@ -185,11 +186,7 @@ export default function PerfilPage() {
           <div className="mb-8 rounded-2xl border border-white/10 bg-gradient-to-br from-[#21140e] to-[#15110f] p-5 sm:p-8">
             <div className="flex flex-col items-start justify-between gap-6 lg:flex-row">
               <div className="flex flex-col gap-5 sm:flex-row">
-                {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt={`Foto de ${displayName}`} className="h-24 w-24 rounded-full object-cover" />
-                ) : (
-                  <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-full bg-[#ff8a3d] text-4xl font-black text-[#21140e]">{initial}</div>
-                )}
+                <ProfileAvatar value={profile.avatar_url} name={displayName} className="h-24 w-24 text-4xl" />
                 <div>
                   <p className="text-sm font-bold uppercase tracking-[.2em] text-[#ffd19a]">{profile.temporary_expires_at ? "Conta temporária da apresentação" : "Perfil de " + roleLabels[profile.role]}</p>
                   <h1 className="mt-2 text-3xl font-black sm:text-4xl md:text-5xl">{displayName}</h1>
@@ -204,6 +201,9 @@ export default function PerfilPage() {
               </div>
             </div>
           </div>
+
+          <ProfilePhotoEditor userId={profile.id} avatar={profile.avatar_url} name={displayName}
+            onSaved={avatar_url => setProfile(current => current ? { ...current, avatar_url } : current)} />
 
           {editing && (
             <section className="mb-8 rounded-2xl border border-[#ff8a3d]/30 bg-white/[.045] p-5 md:p-8">

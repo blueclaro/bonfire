@@ -12,6 +12,8 @@ function renderFeed(entries=[],user='demo'){
     if(name==='@/lib/social')return load('lib/social.ts');
     if(name==='@/lib/supabase')return {supabase:{}};
     if(name==='@/components/SocialAvatar')return load('components/SocialAvatar.tsx');
+    if(name==='@/components/ProfileAvatar')return load('components/ProfileAvatar.tsx');
+    if(name==='@/lib/profilePhoto')return load('lib/profilePhoto.ts');
     if(name==='@/components/ReactionIcon')return load('components/ReactionIcon.tsx');
     if(name==='@/components/SparkThread')return {default:()=>React.createElement('div',null,'Conversa')};
     if(name==='@/components/StaffRemoveSpark')return {default:()=>React.createElement('button',null,'Excluir faísca como moderação')};
