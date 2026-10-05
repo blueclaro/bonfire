@@ -24,7 +24,7 @@ test('aprovação de contas: fila, decisões e bloqueio no PostgreSQL', async t 
   try {
     await db.exec(`
       create role authenticated; create role anon; create schema auth;
-      create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,
+      create table auth.users(id uuid primary key,email varchar(255),email_confirmed_at timestamptz,
         is_anonymous boolean not null default false,raw_user_meta_data jsonb default '{}');
       create function auth.uid() returns uuid language sql stable as $$
         select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid
@@ -50,6 +50,18 @@ test('aprovação de contas: fila, decisões e bloqueio no PostgreSQL', async t 
     await db.query("insert into auth.users(id,is_anonymous,raw_user_meta_data) values($1,true,$2)",
       [guest, JSON.stringify({temporary_name: 'Visitante', temporary_tag: 'test', approval_status: 'approved'})]);
     await db.exec(migration);
+
+    await t.test('correção isolada resolve a incompatibilidade varchar do Supabase sem recriar contas', async () => {
+      const oldDefinition = migration.match(/create or replace function public\.account_review_queue\([\s\S]*?end; \$\$;/)[0].replace('u.email::text', 'u.email');
+      await db.exec(oldDefinition);
+      await asUser(moderator);
+      await assert.rejects(db.query('select * from account_review_queue()'), {code: '42804'});
+      await db.exec('reset role');
+      const repair = read('supabase/migrations/20261005_fix_account_review_queue.sql');
+      await db.exec(repair); await db.exec(repair);
+      await asUser(moderator);
+      assert.equal((await db.query('select * from account_review_queue()')).rows.length, 4);
+    });
 
     await t.test('preserva contas existentes e reaplicar não aprova novos cadastros', async () => {
       await asUser(student);

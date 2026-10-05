@@ -88,7 +88,7 @@ begin
     raise exception 'Filtro inválido.' using errcode='22023';
   end if;
   return query select p.id,p.username,p.display_name,p.role,p.class_name,p.created_at,p.temporary_expires_at,
-    u.email,u.email_confirmed_at is not null,p.approval_status,p.approval_reason,p.approval_reviewed_at,
+    u.email::text,u.email_confirmed_at is not null,p.approval_status,p.approval_reason,p.approval_reviewed_at,
     coalesce(reviewer.display_name,reviewer.username)
     from public.profiles p join auth.users u on u.id=p.id
     left join public.profiles reviewer on reviewer.id=p.approval_reviewed_by
